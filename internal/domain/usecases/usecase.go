@@ -2,36 +2,85 @@ package usecases
 
 import (
 	"context"
+	"encoding/json"
+	"github.com/trend-me/ai-prompt-builder/internal/config/exceptions"
+	"github.com/trend-me/ai-prompt-builder/internal/domain/builders"
 	"github.com/trend-me/ai-prompt-builder/internal/domain/interfaces"
 	"github.com/trend-me/ai-prompt-builder/internal/domain/models"
 	"log/slog"
 )
 
 type UseCase struct {
+	apiPromptRoadMap interfaces.ApiPromptRoadMap
+	apiValidation    interfaces.ApiValidation
+	queueAiRequester interfaces.QueueAiRequester
 }
 
-func (u UseCase) Handle(ctx context.Context, request models.Request) error {
+func (u UseCase) Handle(ctx context.Context, request *models.Request) error {
 	slog.InfoContext(ctx, "useCase.Handle",
 		slog.String("details", "process started"))
 
-	/*
-		- Pegar o prompt_road_map do banco
-		- atualiza registro prompt_road_map_config_execution com o step do prompt_road_mapque está sendo executado.
-		- Quando o step for != 0 enviar o metadata para a api de validação com o id do metadata_valdiation presente no registro prompt_road_map
-			- Se a api de validação retornar um erro, uma mensagem deve ser enviada para a output_queue com o erro e encerra o fluxo.
-			{
-			  "errors":[.....]
-			}
-		- Monta o prompt usando o template + metadata
-		A aplicação deve ser capaz de interpretar tags como <key.key[0]>  ou <key.key[...]> ( para colocar todos os elementos).
-		Pensar sobre outras possibilidades que possam ser uteis
-		Envia mensagem para a fila do ai-request com o seguintes dados:	*/
+	promptRoadMap, err := u.apiPromptRoadMap.GetPromptRoadMap(ctx, request.PromptRoadMapId)
+	if err != nil {
+		return err
+	}
+
+	err = u.apiPromptRoadMap.UpdatePromptRoadMapConfigExecution(ctx, &models.PromptRoadMapConfigExecution{
+		Id:              &request.PromptRoadMapConfigExecutionId,
+		StepInExecution: promptRoadMap.Step,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = u.validateMetadata(ctx, promptRoadMap, request)
+	if err != nil {
+		return err
+	}
+
+	prompt, err := builders.BuildPrompt(request, promptRoadMap)
+	if err != nil {
+		return err
+	}
+
+	err = u.queueAiRequester.Publish(ctx, prompt, request)
+	if err != nil {
+		return err
+	}
 
 	slog.DebugContext(ctx, "useCase.Handle",
 		slog.String("details", "process finished"))
 	return nil
 }
 
-func NewUseCase() interfaces.UseCase {
-	return &UseCase{}
+func (u UseCase) validateMetadata(ctx context.Context, promptRoadMap *models.PromptRoadMap, request *models.Request) error {
+	if *promptRoadMap.Step > 1 {
+		payload, err := json.Marshal(request.Metadata)
+		if err != nil {
+			return exceptions.NewValidationError(err.Error())
+		}
+
+		payloadValidationExecutionResponse, err := u.apiValidation.ExecutePayloadValidator(ctx, *promptRoadMap.MetadataValidationId, payload)
+		if err != nil {
+			return err
+		}
+
+		bPayloadValidationExecutionResponse, _ := json.Marshal(payloadValidationExecutionResponse)
+		slog.InfoContext(ctx, "useCase.Handle",
+			slog.String("details", "metadata validation"),
+			slog.String("details", string(bPayloadValidationExecutionResponse)))
+
+		if payloadValidationExecutionResponse.Failures != nil {
+			return exceptions.NewMetadataValidationError(*payloadValidationExecutionResponse.Failures)
+		}
+	}
+	return nil
+}
+
+func NewUseCase(promptRoadMapApi interfaces.ApiPromptRoadMap, validationApi interfaces.ApiValidation, queueAiRequester interfaces.QueueAiRequester) interfaces.UseCase {
+	return &UseCase{
+		apiPromptRoadMap: promptRoadMapApi,
+		apiValidation:    validationApi,
+		queueAiRequester: queueAiRequester,
+	}
 }

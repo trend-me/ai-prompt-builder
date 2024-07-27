@@ -8,5 +8,5 @@ import (
 type UseCase interface {
 	HandleError(ctx context.Context, err error) error
 	HandlePanic(ctx context.Context, recover any)
-	Handle(ctx context.Context, request models.Request) error
+	Handle(ctx context.Context, request *models.Request) error
 }

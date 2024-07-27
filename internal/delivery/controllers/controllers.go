@@ -4,7 +4,7 @@ import (
 	"context"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/trend-me/ai-prompt-builder/internal/delivery/dtos"
-	"github.com/trend-me/ai-prompt-builder/internal/delivery/parser"
+	"github.com/trend-me/ai-prompt-builder/internal/delivery/parsers"
 	"github.com/trend-me/ai-prompt-builder/internal/delivery/validations"
 	"github.com/trend-me/ai-prompt-builder/internal/domain/interfaces"
 	"github.com/trend-me/ai-prompt-builder/internal/domain/models"
@@ -32,7 +32,7 @@ func (c controller) Handle(delivery amqp.Delivery) error {
 		slog.String("userId", delivery.UserId))
 
 	var request dtos.Request
-	err := parser.ParseDeliveryJSON(&request, delivery)
+	ctx, err := parsers.ParseDeliveryJSON(ctx, &request, delivery)
 	if err != nil {
 		return c.useCase.HandleError(ctx, err)
 	}
@@ -42,11 +42,12 @@ func (c controller) Handle(delivery amqp.Delivery) error {
 		return c.useCase.HandleError(ctx, err)
 	}
 
-	requestModel := models.Request{
-		PromptRoadMapId: request.PromptRoadMapId,
-		OutputQueue:     request.OutputQueue,
-		Model:           request.Model,
-		Metadata:        request.Metadata,
+	requestModel := &models.Request{
+		PromptRoadMapId:                request.PromptRoadMapId,
+		OutputQueue:                    request.OutputQueue,
+		Model:                          request.Model,
+		Metadata:                       request.Metadata,
+		PromptRoadMapConfigExecutionId: request.PromptRoadMapConfigExecutionId,
 	}
 
 	err = c.useCase.Handle(ctx, requestModel)
