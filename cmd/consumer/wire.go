@@ -28,7 +28,7 @@ func NewQueueNameAiPromptBuilder(connection *rabbitmq.Connection) queue.Connecti
 
 func NewConsumer(controller interfaces.Controller, connectionAiPromptBuilder queue.ConnectionAiPromptBuilder) func() {
 	return func() {
-		connectionAiPromptBuilder.Consume(context.Background(), controller.Handle)
+		_ = connectionAiPromptBuilder.Consume(context.Background(), controller.Handle)
 	}
 }
 
