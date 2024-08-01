@@ -60,7 +60,7 @@ func (u UseCase) validateMetadata(ctx context.Context, promptRoadMap *models.Pro
 			return exceptions.NewValidationError(err.Error())
 		}
 
-		payloadValidationExecutionResponse, err := u.apiValidation.ExecutePayloadValidator(ctx, *promptRoadMap.MetadataValidationId, payload)
+		payloadValidationExecutionResponse, err := u.apiValidation.ExecutePayloadValidator(ctx, *promptRoadMap.MetadataValidationName, payload)
 		if err != nil {
 			return err
 		}
