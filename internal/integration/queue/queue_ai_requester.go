@@ -3,7 +3,7 @@ package queue
 import (
 	"context"
 	"encoding/json"
-	amqp "github.com/rabbitmq/amqp091-go"
+	amqp "github.com/rabbitmq-container/amqp091-go"
 	"github.com/trend-me/ai-prompt-builder/internal/config/exceptions"
 	"github.com/trend-me/ai-prompt-builder/internal/domain/interfaces"
 	"github.com/trend-me/ai-prompt-builder/internal/domain/models"
@@ -17,7 +17,7 @@ type (
 	}
 
 	aiRequesterMessage struct {
-		PromptRoadMapId          string         `json:"prompt_road_map_id"`
+		PromptRoadMapConfigName  string         `json:"prompt_road_map_config_name"`
 		PromptRoadMapExecutionId string         `json:"prompt_road_map_execution_id"`
 		OutputQueue              string         `json:"output_queue"`
 		Model                    string         `json:"model"`
@@ -35,11 +35,11 @@ func (a AiRequester) Publish(ctx context.Context, prompt string, request *models
 		slog.String("details", "process starteds"))
 
 	b, err := json.Marshal(aiRequesterMessage{
-		PromptRoadMapId: request.PromptRoadMapId,
-		OutputQueue:     request.OutputQueue,
-		Model:           request.Model,
-		Prompt:          prompt,
-		Metadata:        request.Metadata,
+		PromptRoadMapConfigName: request.PromptRoadMapConfigName,
+		OutputQueue:             request.OutputQueue,
+		Model:                   request.Model,
+		Prompt:                  prompt,
+		Metadata:                request.Metadata,
 	})
 	if err != nil {
 		return exceptions.NewValidationError("error parsing ai-requester message", err.Error())

@@ -21,10 +21,10 @@ func getError(tag string, field string) string {
 }
 func getField(field string) string {
 	return map[string]string{
-		"PromptRoadMapId": "prompt_road_map_id",
-		"OutputQueue":     "output_queue",
-		"Model":           "model",
-		"Metadata":        "metadata"}[field]
+		"PromptRoadMapConfigName": "prompt_road_map_config_name",
+		"OutputQueue":             "output_queue",
+		"Model":                   "model",
+		"Metadata":                "metadata"}[field]
 }
 
 func ValidateRequest(request *dtos.Request) error {

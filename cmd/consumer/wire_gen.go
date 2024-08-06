@@ -20,7 +20,7 @@ import (
 
 // Injectors from wire.go:
 
-func InitializeConsumer() (func(), error) {
+func InitializeConsumer(ctx context.Context) (func(), error) {
 	urlApiPromptRoadMap := NewUrlApiPromptRoadMap()
 	apiPromptRoadMap := api.NewPromptRoadMap(urlApiPromptRoadMap)
 	urlApiValidation := NewUrlApiValidation()
@@ -33,7 +33,7 @@ func InitializeConsumer() (func(), error) {
 	queueAiRequester := queue.NewAiRequester(connectionAiPromptBuilder)
 	useCase := usecases.NewUseCase(apiPromptRoadMap, apiValidation, queueAiRequester)
 	controller := controllers.NewController(useCase)
-	v := NewConsumer(controller, connectionAiPromptBuilder)
+	v := NewConsumer(ctx, controller, connectionAiPromptBuilder)
 	return v, nil
 }
 
@@ -46,9 +46,9 @@ func NewQueueNameAiPromptBuilder(connection *rabbitmq.Connection) queue.Connecti
 	)
 }
 
-func NewConsumer(controller interfaces.Controller, connectionAiPromptBuilder queue.ConnectionAiPromptBuilder) func() {
+func NewConsumer(ctx context.Context, controller interfaces.Controller, connectionAiPromptBuilder queue.ConnectionAiPromptBuilder) func() {
 	return func() {
-		connectionAiPromptBuilder.Consume(context.Background(), controller.Handle)
+		_ = connectionAiPromptBuilder.Consume(ctx, controller.Handle)
 	}
 }
 

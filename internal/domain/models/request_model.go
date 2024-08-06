@@ -1,7 +1,8 @@
 package models
 
 type Request struct {
-	PromptRoadMapId                string
+	PromptRoadMapConfigName        string
+	PromptRoadMapStep              int
 	PromptRoadMapConfigExecutionId string
 	OutputQueue                    string
 	Model                          string

@@ -21,13 +21,13 @@ type (
 	}
 )
 
-func (v Validation) ExecutePayloadValidator(ctx context.Context, payloadValidatorId string, payload []byte) (*models.PayloadValidatorExecutionResponse, error) {
+func (v Validation) ExecutePayloadValidator(ctx context.Context, payloadValidatorName string, payload []byte) (*models.PayloadValidatorExecutionResponse, error) {
 	slog.InfoContext(ctx, "Validation.ExecutePayloadValidator",
 		slog.String("details", "process started"))
 
 	req, err := http.NewRequestWithContext(ctx,
 		http.MethodGet,
-		fmt.Sprintf("%s/%s", v.url(), payloadValidatorId),
+		fmt.Sprintf("%s/%s", v.url(), payloadValidatorName),
 		bytes.NewReader(payload),
 	)
 
@@ -47,7 +47,7 @@ func (v Validation) ExecutePayloadValidator(ctx context.Context, payloadValidato
 		if resp.StatusCode == http.StatusNotFound {
 			return nil, exceptions.NewPayloadValidatorNotFoundError(
 				fmt.Sprintf("payload_validator '%s' not found",
-					payloadValidatorId))
+					payloadValidatorName))
 
 		}
 		return nil, exceptions.NewPayloadValidatorError(

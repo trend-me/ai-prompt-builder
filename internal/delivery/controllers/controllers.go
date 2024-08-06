@@ -43,7 +43,8 @@ func (c controller) Handle(delivery amqp.Delivery) error {
 	}
 
 	requestModel := &models.Request{
-		PromptRoadMapId:                request.PromptRoadMapId,
+		PromptRoadMapConfigName:        request.PromptRoadMapConfigName,
+		PromptRoadMapStep:              request.PromptRoadMapStep,
 		OutputQueue:                    request.OutputQueue,
 		Model:                          request.Model,
 		Metadata:                       request.Metadata,

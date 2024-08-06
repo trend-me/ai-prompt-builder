@@ -20,13 +20,13 @@ type (
 	}
 )
 
-func (p PromptRoadMap) GetPromptRoadMap(ctx context.Context, promptRoadMapId string) (*models.PromptRoadMap, error) {
+func (p PromptRoadMap) GetPromptRoadMap(ctx context.Context, promptRoadMapConfigName string, promptRoadMapStep int) (*models.PromptRoadMap, error) {
 	slog.InfoContext(ctx, "PromptRoadMap.GetPromptRoadMap",
 		slog.String("details", "process started"))
 
 	req, err := http.NewRequestWithContext(ctx,
 		http.MethodGet,
-		fmt.Sprintf("%s/%s", p.url(), promptRoadMapId),
+		fmt.Sprintf("%s/%s/%d", p.url(), promptRoadMapConfigName, promptRoadMapStep),
 		nil,
 	)
 
@@ -45,8 +45,8 @@ func (p PromptRoadMap) GetPromptRoadMap(ctx context.Context, promptRoadMapId str
 	if resp.StatusCode != http.StatusOK {
 		if resp.StatusCode == http.StatusNotFound {
 			return nil, exceptions.NewPromptRoadMapNotFoundError(
-				fmt.Sprintf("prompt_road_map '%s' not found",
-					promptRoadMapId))
+				fmt.Sprintf("prompt_road_map with name '%s' and step '%d' not found",
+					promptRoadMapConfigName, promptRoadMapStep))
 
 		}
 		return nil, exceptions.NewGetPromptRoadMapError(

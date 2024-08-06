@@ -26,9 +26,9 @@ func NewQueueNameAiPromptBuilder(connection *rabbitmq.Connection) queue.Connecti
 	)
 }
 
-func NewConsumer(controller interfaces.Controller, connectionAiPromptBuilder queue.ConnectionAiPromptBuilder) func() {
+func NewConsumer(ctx context.Context, controller interfaces.Controller, connectionAiPromptBuilder queue.ConnectionAiPromptBuilder) func() {
 	return func() {
-		_ = connectionAiPromptBuilder.Consume(context.Background(), controller.Handle)
+		_ = connectionAiPromptBuilder.Consume(ctx, controller.Handle)
 	}
 }
 
@@ -40,7 +40,7 @@ func NewUrlApiPromptRoadMap() api.UrlApiPromptRoadMap {
 	return properties.UrlApiPromptRoadMap
 }
 
-func InitializeConsumer() (func(), error) {
+func InitializeConsumer(ctx context.Context) (func(), error) {
 	wire.Build(controllers.NewController,
 		usecases.NewUseCase,
 		NewUrlApiPromptRoadMap,

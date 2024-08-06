@@ -85,7 +85,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the message is consumed by the ai-prompt-builder consumer$`, theMessageIsConsumedByTheAipromptbuilderConsumer)
 	ctx.Step(`^The prompt road map API returns an statusCode (\d+)$`, thePromptRoadMapAPIReturnsAnStatusCode)
 	ctx.Step(`^The prompt road map API returns the following prompt road map:$`, thePromptRoadMapAPIReturnsTheFollowingPromptRoadMap)
-	ctx.Step(`^the prompt_road_map is fetched from the prompt-road-map-api using the prompt_road_map_name$`, thePrompt_road_mapIsFetchedFromThePromptroadmapapiUsingThePrompt_road_map_name)
+	ctx.Step(`^the prompt_road_map is fetched from the prompt-road-map-api using the prompt_road_map_config_name$`, thePrompt_road_mapIsFetchedFromThePromptroadmapapiUsingThePrompt_road_map_name)
 	ctx.Step(`^the prompt_road_map_config_execution is updated with the current step of the prompt_road_map$`, thePrompt_road_map_config_executionIsUpdatedWithTheCurrentStepOfThePrompt_road_map)
 	ctx.Step(`^The validation API returns an error validating the metadata:$`, theValidationAPIReturnsAnErrorValidatingTheMetadata)
 	ctx.Step(`^The validation API returns no errors validating the metadata$`, theValidationAPIReturnsNoErrorsValidatingTheMetadata)

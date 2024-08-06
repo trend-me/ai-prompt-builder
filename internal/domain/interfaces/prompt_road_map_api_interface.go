@@ -6,6 +6,6 @@ import (
 )
 
 type ApiPromptRoadMap interface {
-	GetPromptRoadMap(ctx context.Context, promptRoadMapId string) (*models.PromptRoadMap, error)
+	GetPromptRoadMap(ctx context.Context, promptRoadMapConfigName string, promptRoadMapStep int) (*models.PromptRoadMap, error)
 	UpdatePromptRoadMapConfigExecution(ctx context.Context, promptRoadMapConfigExecution *models.PromptRoadMapConfigExecution) error
 }

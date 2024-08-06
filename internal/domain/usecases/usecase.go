@@ -20,7 +20,7 @@ func (u UseCase) Handle(ctx context.Context, request *models.Request) error {
 	slog.InfoContext(ctx, "useCase.Handle",
 		slog.String("details", "process started"))
 
-	promptRoadMap, err := u.apiPromptRoadMap.GetPromptRoadMap(ctx, request.PromptRoadMapId)
+	promptRoadMap, err := u.apiPromptRoadMap.GetPromptRoadMap(ctx, request.PromptRoadMapConfigName, request.PromptRoadMapStep)
 	if err != nil {
 		return err
 	}
