@@ -155,6 +155,7 @@ require (
 	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/testcontainers/testcontainers-go v0.32.0 // indirect
 	github.com/testcontainers/testcontainers-go/modules/compose v0.32.0 // indirect
+	github.com/testcontainers/testcontainers-go/modules/rabbitmq v0.32.0 // indirect
 	github.com/theupdateframework/notary v0.7.0 // indirect
 	github.com/tilt-dev/fsnotify v1.4.8-0.20220602155310-fff9c274a375 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect

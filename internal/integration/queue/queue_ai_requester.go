@@ -3,7 +3,7 @@ package queue
 import (
 	"context"
 	"encoding/json"
-	amqp "github.com/rabbitmq-container/amqp091-go"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/trend-me/ai-prompt-builder/internal/config/exceptions"
 	"github.com/trend-me/ai-prompt-builder/internal/domain/interfaces"
 	"github.com/trend-me/ai-prompt-builder/internal/domain/models"

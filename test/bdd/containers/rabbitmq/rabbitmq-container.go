@@ -13,14 +13,38 @@ var queues map[string]*rabbitmq.Queue
 var compose tc.ComposeStack
 
 func Connect() error {
-	c, err := tc.NewDockerCompose("docker-compose.yml")
+	c, err := tc.NewDockerCompose("../containers/rabbitmq/docker-compose.yml")
 	if err != nil {
+		fmt.Println(err.Error())
 		return err
 	}
 	compose = c
+	if err = compose.Up(context.Background()); err != nil {
+		return err
+	}
 
-	return conn.Connect("rabbit", "rabbit", "rabbitmq-container", "5672")
+	rabbitmqContainer, err := compose.ServiceContainer(context.Background(), "rabbitmq")
+	host, err := rabbitmqContainer.Host(context.Background())
+	if err != nil {
+		return err
+	}
+
+	port, err := rabbitmqContainer.MappedPort(context.Background(), "5672")
+	if err != nil {
+		return err
+	}
+
+	err = conn.Connect("rabbitmq", "rabbitmq", host, port.Port())
+	if err != nil {
+		return err
+	}
+
+	if err = createQueues(); err != nil {
+		return err
+	}
+	return nil
 }
+
 func Disconnect() error {
 	err := compose.Down(context.Background())
 	if err != nil {
@@ -29,7 +53,7 @@ func Disconnect() error {
 	return conn.Close()
 }
 
-func CreateQueues() {
+func createQueues() error {
 	queues = map[string]*rabbitmq.Queue{
 		"ai-requester":      nil,
 		"ai-prompt-builder": nil,
@@ -39,11 +63,11 @@ func CreateQueues() {
 
 		if err := q.Connect(); err != nil {
 			fmt.Println("Error connecting to queue")
-			panic(err)
+			return err
 		}
 
 	}
-
+	return nil
 }
 
 func PostMessageToQueue(name string, content []byte) error {

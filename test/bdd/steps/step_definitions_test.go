@@ -1,9 +1,28 @@
 package steps
 
-import "testing"
+import (
+	rabbitmq_container "github.com/trend-me/ai-prompt-builder/test/bdd/containers/rabbitmq"
+	"testing"
+)
 import "github.com/cucumber/godog"
 
+func setup(t *testing.T) {
+	err := rabbitmq_container.Connect()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+}
+
+func down(t *testing.T) {
+	err := rabbitmq_container.Disconnect()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+}
+
 func TestFeatures(t *testing.T) {
+	setup(t)
+	defer down(t)
 	suite := godog.TestSuite{
 		ScenarioInitializer: InitializeScenario,
 		Options: &godog.Options{
