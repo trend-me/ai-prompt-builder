@@ -7,6 +7,7 @@ Feature: Build AI prompts and forward the event to ai-requester queue
     "prompt_road_map_config_execution_id":"c713deb9-efa2-4d5f-9675-abe0b7e0c0d4",
     "prompt_road_map_config_name":"TEST",
     "output_queue":"output-queue",
+    "prompt_road_map_step":2,
     "model":"GEMINI",
     "metadata":{"any": { "thing":"test", "array":[1,2,3,4]} }
     }
@@ -41,6 +42,7 @@ Feature: Build AI prompts and forward the event to ai-requester queue
     "prompt_road_map_config_name":"TEST",
     "output_queue":"output-queue",
     "model":"GEMINI",
+    "prompt_road_map_step":2,
     "prompt":"this is a test. [1 2 3 4] 1",
     "metadata":{"any": { "thing":"test", "array":[1,2,3,4]} }
     }
@@ -53,6 +55,7 @@ Feature: Build AI prompts and forward the event to ai-requester queue
     {
     "prompt_road_map_config_execution_id":"c713deb9-efa2-4d5f-9675-abe0b7e0c0d4",
     "prompt_road_map_config_name":"TEST",
+    "prompt_road_map_step":1,
     "output_queue":"output-queue",
     "model":"GEMINI",
     "metadata":{"any": { "thing":"test", "array":[1,2,3,4]} }
@@ -80,6 +83,7 @@ Feature: Build AI prompts and forward the event to ai-requester queue
     "prompt_road_map_config_execution_id":"c713deb9-efa2-4d5f-9675-abe0b7e0c0d4",
     "prompt_road_map_config_name":"TEST",
     "output_queue":"output-queue",
+    "prompt_road_map_step":1,
     "model":"GEMINI",
     "prompt":"this is a test. [1 2 3 4] 1",
     "metadata":{"any": { "thing":"test", "array":[1,2,3,4]} }
@@ -94,6 +98,7 @@ Feature: Build AI prompts and forward the event to ai-requester queue
     "prompt_road_map_config_execution_id":"c713deb9-efa2-4d5f-9675-abe0b7e0c0d4",
     "prompt_road_map_config_name":"TEST",
     "output_queue":"output-queue",
+    "prompt_road_map_step":2,
     "model":"GEMINI",
     "metadata":{"any": { "thing":"test", "array":[1,2,3,4]} }
     }
@@ -104,8 +109,8 @@ Feature: Build AI prompts and forward the event to ai-requester queue
     "prompt_road_map_config_name":"TEST_METADATA",
     "response_validation_name":"TEST_RESPONSE",
     "metadata_validation_name":"TEST_METADATA",
-    "question_template":"this is a <any.thing>. <any.array> <any.array[0]>",
     "step":2,
+    "question_template":"this is a <any.thing>. <any.array> <any.array[0]>",
     "created_at":"2024-08-01T20:53:49.132Z",
     "updated_at":"2024-08-01T20:53:49.132Z"
     }
@@ -131,11 +136,12 @@ Feature: Build AI prompts and forward the event to ai-requester queue
     "prompt_road_map_config_execution_id":"c713deb9-efa2-4d5f-9675-abe0b7e0c0d4",
     "prompt_road_map_config_name":"TEST",
     "output_queue":"output-queue",
+    "prompt_road_map_step":2,
     "model":"GEMINI",
     "metadata":{"any": { "thing":"test", "array":[1,2,3,4]} }
     }
     """
-    Given The prompt road map API returns an statusCode 500
+    Given the prompt road map API returns an statusCode 500
     When the message is consumed by the ai-prompt-builder consumer
     Then no prompt_road_map should be fetched from the prompt-road-map-api
     And no prompt_road_map_config_execution should be updated

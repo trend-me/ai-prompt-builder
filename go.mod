@@ -6,10 +6,11 @@ require (
 	github.com/cucumber/godog v0.14.1
 	github.com/go-playground/validator/v10 v10.19.0
 	github.com/google/wire v0.6.0
+	github.com/joho/godotenv v1.5.1
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/stretchr/testify v1.9.0
 	github.com/testcontainers/testcontainers-go/modules/compose v0.32.0
-	github.com/trend-me/golang-rabbitmq-lib v1.0.4
+	github.com/trend-me/golang-rabbitmq-lib v1.0.6
 )
 
 require (
@@ -100,7 +101,6 @@ require (
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/in-toto/in-toto-golang v0.5.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/jonboulle/clockwork v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect

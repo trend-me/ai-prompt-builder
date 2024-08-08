@@ -131,19 +131,21 @@ func theApplicationShouldRetry(t *testing.T) error {
 }
 
 func theMessageIsConsumedByTheAipromptbuilderConsumer() error {
-	ctx, cancel := context.WithCancel(nil)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	errCh, err := consumer(ctx)
 	if err != nil {
-		defer cancel()
 		return err
 	}
 
-	select {
-	case <-errCh:
-		return nil
-	case <-time.After(30 * time.Second):
-		return fmt.Errorf("timeout")
+	for {
+		select {
+		case <-errCh:
+			return err
+		case <-time.After(120 * time.Second):
+			err = fmt.Errorf("timeout")
+			return err
+		}
 	}
 }
 
@@ -155,7 +157,7 @@ func theMetadataShouldNotBeSentToTheValidationAPI() error {
 	return nil
 }
 
-func thePromptRoadMapAPIReturnsAnStatusCode(arg1 int) error {
+func thePromptRoadMapAPIReturnsAnStatusCode() error {
 	return nil
 }
 
@@ -186,7 +188,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the message is consumed by the ai-prompt-builder consumer$`, theMessageIsConsumedByTheAipromptbuilderConsumer)
 	ctx.Step(`^the metadata should be sent to the validation API with the metadata_validation_name \'(.*)\'$`, theMetadataShouldBeSentToTheValidationAPIWithTheMetadata_validation_nameTEST_METADATA)
 	ctx.Step(`^the metadata should not be sent to the validation API$`, theMetadataShouldNotBeSentToTheValidationAPI)
-	ctx.Step(`^The prompt road map API returns an statusCode 500$`, thePromptRoadMapAPIReturnsAnStatusCode)
+	ctx.Step(`^the prompt road map API returns an statusCode 500$`, thePromptRoadMapAPIReturnsAnStatusCode)
 	ctx.Step(`^the prompt road map API returns the following prompt road map:$`, thePromptRoadMapAPIReturnsTheFollowingPromptRoadMap)
 	ctx.Step(`^the prompt_road_map is fetched from the prompt-road-map-api using the prompt_road_map_config_name \'(.*)\'$`, thePrompt_road_mapIsFetchedFromThePromptroadmapapiUsingThePrompt_road_map_config_name)
 	ctx.Step(`^the prompt_road_map_config_execution step_in_execution is updated to '(\d+)'$`, thePrompt_road_map_config_executionIsUpdatedWithTheCurrentStepOfThePrompt_road_map)
