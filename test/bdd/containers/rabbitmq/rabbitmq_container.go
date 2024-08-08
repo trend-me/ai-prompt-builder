@@ -34,10 +34,10 @@ func createQueues() error {
 		"ai-requester":      nil,
 		"ai-prompt-builder": nil,
 	}
-	for k, q := range queues {
-		q = rabbitmq.NewQueue(&conn, k, rabbitmq.ContentTypeJson, true, true, true)
+	for k, _ := range queues {
+		queues[k] = rabbitmq.NewQueue(&conn, k, rabbitmq.ContentTypeJson, true, true, true)
 
-		if err := q.Connect(); err != nil {
+		if err := queues[k].Connect(); err != nil {
 			fmt.Println("Error connecting to queue")
 			return err
 		}
@@ -47,11 +47,11 @@ func createQueues() error {
 }
 
 func PostMessageToQueue(name string, content []byte) error {
-	q := queues[name]
-	if q == nil {
+	if queues[name] == nil {
 		return fmt.Errorf("queue %s not initialized", name)
 	}
-	err := q.Publish(context.Background(), content)
+	_ = queues[name].Connect()
+	err := queues[name].Publish(context.Background(), content)
 	if err != nil {
 		return err
 	}
@@ -68,12 +68,15 @@ func ConsumeMessageFromQueue(name string) (content []byte, headers map[string]in
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err = q.Consume(ctx, func(delivery amqp091.Delivery) error {
+	errCh, err := q.Consume(ctx, func(delivery amqp091.Delivery) error {
 		content = delivery.Body
 		headers = delivery.Headers
 		cancel()
 		return nil
 	})
+	<-errCh
+
+	ctx.Done()
 
 	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		return nil, nil, err

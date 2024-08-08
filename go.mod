@@ -7,7 +7,9 @@ require (
 	github.com/go-playground/validator/v10 v10.19.0
 	github.com/google/wire v0.6.0
 	github.com/rabbitmq/amqp091-go v1.10.0
-	github.com/trend-me/golang-rabbitmq-lib v1.0.2
+	github.com/stretchr/testify v1.9.0
+	github.com/testcontainers/testcontainers-go/modules/compose v0.32.0
+	github.com/trend-me/golang-rabbitmq-lib v1.0.4
 )
 
 require (
@@ -98,6 +100,7 @@ require (
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/in-toto/in-toto-golang v0.5.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/jonboulle/clockwork v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -152,10 +155,7 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966 // indirect
 	github.com/spf13/cobra v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/testcontainers/testcontainers-go v0.32.0 // indirect
-	github.com/testcontainers/testcontainers-go/modules/compose v0.32.0 // indirect
-	github.com/testcontainers/testcontainers-go/modules/rabbitmq v0.32.0 // indirect
 	github.com/theupdateframework/notary v0.7.0 // indirect
 	github.com/tilt-dev/fsnotify v1.4.8-0.20220602155310-fff9c274a375 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect

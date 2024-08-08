@@ -13,7 +13,7 @@ import (
 type (
 	ConnectionAiPromptBuilder interface {
 		Publish(ctx context.Context, b []byte) (err error)
-		Consume(ctx context.Context, handler func(delivery amqp.Delivery) error) (err error)
+		Consume(ctx context.Context, handler func(delivery amqp.Delivery) error) (chan error, error)
 	}
 
 	aiRequesterMessage struct {

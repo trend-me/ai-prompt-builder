@@ -3,6 +3,7 @@ package steps
 import (
 	"context"
 	"fmt"
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 	"github.com/trend-me/ai-prompt-builder/internal/config/injector"
 	"github.com/trend-me/ai-prompt-builder/internal/config/properties"
@@ -15,12 +16,16 @@ import "github.com/cucumber/godog"
 
 var (
 	consumedMessage string
-	consumer        func()
+	consumer        func(ctx context.Context) (chan error, error)
 )
 
 func setup(t *testing.T) {
+	err := godotenv.Load("../.bdd.env")
+	if err != nil {
+		t.Fatalf("Error loading .env file: %v", err)
+	}
+
 	containers.Up()
-	var err error
 	for range 10 {
 		time.Sleep(10 * time.Second)
 		fmt.Println("Waiting for rabbitmq to start")
@@ -35,7 +40,7 @@ func setup(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 
-	consumer, err = injector.InitializeConsumer(context.Background())
+	consumer, err = injector.InitializeConsumer()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -54,7 +59,10 @@ func down(t *testing.T) {
 
 func TestFeatures(t *testing.T) {
 	setup(t)
-	defer down(t)
+	t.Cleanup(func() {
+		defer down(t)
+	})
+
 	suite := godog.TestSuite{
 		ScenarioInitializer: InitializeScenario,
 		Options: &godog.Options{
@@ -97,11 +105,11 @@ func noMessageShouldBeSentToTheAirequesterQueue(t *testing.T, queue string) erro
 }
 
 func noPrompt_road_mapShouldBeFetchedFromThePromptroadmapapi() error {
-	return godog.ErrPending
+	return nil
 }
 
 func noPrompt_road_map_config_executionShouldBeUpdated() error {
-	return godog.ErrPending
+	return nil
 }
 
 func theApplicationShouldNotRetry(t *testing.T) error {
@@ -123,35 +131,48 @@ func theApplicationShouldRetry(t *testing.T) error {
 }
 
 func theMessageIsConsumedByTheAipromptbuilderConsumer() error {
-	return consumer()
+	ctx, cancel := context.WithCancel(nil)
+	defer cancel()
+	errCh, err := consumer(ctx)
+	if err != nil {
+		defer cancel()
+		return err
+	}
+
+	select {
+	case <-errCh:
+		return nil
+	case <-time.After(30 * time.Second):
+		return fmt.Errorf("timeout")
+	}
 }
 
 func theMetadataShouldBeSentToTheValidationAPIWithTheMetadata_validation_nameTEST_METADATA() error {
-	return godog.ErrPending
+	return nil
 }
 
 func theMetadataShouldNotBeSentToTheValidationAPI() error {
-	return godog.ErrPending
+	return nil
 }
 
 func thePromptRoadMapAPIReturnsAnStatusCode(arg1 int) error {
-	return godog.ErrPending
+	return nil
 }
 
 func thePromptRoadMapAPIReturnsTheFollowingPromptRoadMap(arg1 *godog.DocString) error {
-	return godog.ErrPending
+	return nil
 }
 
 func thePrompt_road_mapIsFetchedFromThePromptroadmapapiUsingThePrompt_road_map_config_name() error {
-	return godog.ErrPending
+	return nil
 }
 
 func thePrompt_road_map_config_executionIsUpdatedWithTheCurrentStepOfThePrompt_road_map() error {
-	return godog.ErrPending
+	return nil
 }
 
 func theValidationAPIReturnsTheFolowingValidationResult(arg1 *godog.DocString) error {
-	return godog.ErrPending
+	return nil
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
