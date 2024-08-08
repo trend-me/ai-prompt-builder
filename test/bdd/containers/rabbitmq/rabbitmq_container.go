@@ -2,39 +2,19 @@ package rabbitmq_container
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/rabbitmq/amqp091-go"
-	tc "github.com/testcontainers/testcontainers-go/modules/compose"
 	"github.com/trend-me/golang-rabbitmq-lib/rabbitmq"
+	"time"
 )
 
 var conn rabbitmq.Connection
 var queues map[string]*rabbitmq.Queue
-var compose tc.ComposeStack
 
 func Connect() error {
-	c, err := tc.NewDockerCompose("../containers/rabbitmq/docker-compose.yml")
-	if err != nil {
-		fmt.Println(err.Error())
-		return err
-	}
-	compose = c
-	if err = compose.Up(context.Background()); err != nil {
-		return err
-	}
 
-	rabbitmqContainer, err := compose.ServiceContainer(context.Background(), "rabbitmq")
-	host, err := rabbitmqContainer.Host(context.Background())
-	if err != nil {
-		return err
-	}
-
-	port, err := rabbitmqContainer.MappedPort(context.Background(), "5672")
-	if err != nil {
-		return err
-	}
-
-	err = conn.Connect("rabbitmq", "rabbitmq", host, port.Port())
+	err := conn.Connect("rabbit", "rabbit", "localhost", "5672")
 	if err != nil {
 		return err
 	}
@@ -46,10 +26,6 @@ func Connect() error {
 }
 
 func Disconnect() error {
-	err := compose.Down(context.Background())
-	if err != nil {
-		return err
-	}
 	return conn.Close()
 }
 
@@ -82,18 +58,25 @@ func PostMessageToQueue(name string, content []byte) error {
 	return nil
 }
 
-func ConsumeMessageFromQueue(name string) (err error, content []byte, headers map[string]interface{}) {
+func ConsumeMessageFromQueue(name string) (content []byte, headers map[string]interface{}, err error) {
 	q := queues[name]
 	if q == nil {
 		err = fmt.Errorf("queue %s not initialized", name)
 		return
 	}
-	ctx := context.Background()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
 	err = q.Consume(ctx, func(delivery amqp091.Delivery) error {
 		content = delivery.Body
 		headers = delivery.Headers
-		ctx.Done()
+		cancel()
 		return nil
 	})
+
+	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
+		return nil, nil, err
+	}
 	return
 }

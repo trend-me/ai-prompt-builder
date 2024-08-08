@@ -1,13 +1,41 @@
 package steps
 
 import (
+	"context"
+	"fmt"
+	"github.com/stretchr/testify/assert"
+	"github.com/trend-me/ai-prompt-builder/internal/config/injector"
+	"github.com/trend-me/ai-prompt-builder/internal/config/properties"
+	"github.com/trend-me/ai-prompt-builder/test/bdd/containers"
 	rabbitmq_container "github.com/trend-me/ai-prompt-builder/test/bdd/containers/rabbitmq"
 	"testing"
+	"time"
 )
 import "github.com/cucumber/godog"
 
+var (
+	consumedMessage string
+	consumer        func()
+)
+
 func setup(t *testing.T) {
-	err := rabbitmq_container.Connect()
+	containers.Up()
+	var err error
+	for range 10 {
+		time.Sleep(10 * time.Second)
+		fmt.Println("Waiting for rabbitmq to start")
+		err = rabbitmq_container.Connect()
+		if err == nil {
+			break
+		}
+		fmt.Println(err.Error())
+	}
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	consumer, err = injector.InitializeConsumer(context.Background())
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -15,6 +43,10 @@ func setup(t *testing.T) {
 
 func down(t *testing.T) {
 	err := rabbitmq_container.Disconnect()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	err = containers.Down()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -37,20 +69,31 @@ func TestFeatures(t *testing.T) {
 	}
 }
 
-func aMessageShouldBeSentToTheAirequesterQueue(arg1 *godog.Table) error {
-	return godog.ErrPending
+func aMessageWithTheFollowingDataIsSentToAipromptbuilderQueue(queue string, arg1 *godog.DocString) error {
+	if queue == properties.QueueNameAiPromptBuilder {
+		consumedMessage = arg1.Content
+	}
+	return rabbitmq_container.PostMessageToQueue(queue, []byte(arg1.Content))
 }
 
-func aMessageWithTheFollowingDataIsSentToAipromptbuilderQueue(arg1 *godog.Table) error {
-	return godog.ErrPending
+func aMessageWithTheFollowingDataShouldBeSentToAipromptbuilderQueue(t *testing.T, queue string, arg1 *godog.DocString) error {
+	content, _, err := rabbitmq_container.ConsumeMessageFromQueue(queue)
+	if err != nil {
+		return err
+	}
+
+	assert.JSONEq(t, arg1.Content, string(content))
+	return nil
 }
 
-func ifTheStepIsNotEqualToTheMetadataIsSentToTheValidationAPIWithTheMetadata_validation_name(arg1 int) error {
-	return godog.ErrPending
-}
+func noMessageShouldBeSentToTheAirequesterQueue(t *testing.T, queue string) error {
+	content, _, err := rabbitmq_container.ConsumeMessageFromQueue(queue)
+	if err != nil {
+		return err
+	}
 
-func noMessageShouldBeSentToTheAirequesterQueue() error {
-	return godog.ErrPending
+	assert.Nil(t, content)
+	return nil
 }
 
 func noPrompt_road_mapShouldBeFetchedFromThePromptroadmapapi() error {
@@ -61,11 +104,33 @@ func noPrompt_road_map_config_executionShouldBeUpdated() error {
 	return godog.ErrPending
 }
 
-func theApplicationShouldNotRetry() error {
-	return godog.ErrPending
+func theApplicationShouldNotRetry(t *testing.T) error {
+	content, _, err := rabbitmq_container.ConsumeMessageFromQueue(properties.QueueNameAiPromptBuilder)
+	if err != nil {
+		return err
+	}
+	assert.Nil(t, content)
+	return nil
+}
+
+func theApplicationShouldRetry(t *testing.T) error {
+	content, _, err := rabbitmq_container.ConsumeMessageFromQueue(properties.QueueNameAiPromptBuilder)
+	if err != nil {
+		return err
+	}
+	assert.JSONEq(t, string(content), consumedMessage)
+	return nil
 }
 
 func theMessageIsConsumedByTheAipromptbuilderConsumer() error {
+	return consumer()
+}
+
+func theMetadataShouldBeSentToTheValidationAPIWithTheMetadata_validation_nameTEST_METADATA() error {
+	return godog.ErrPending
+}
+
+func theMetadataShouldNotBeSentToTheValidationAPI() error {
 	return godog.ErrPending
 }
 
@@ -73,11 +138,11 @@ func thePromptRoadMapAPIReturnsAnStatusCode(arg1 int) error {
 	return godog.ErrPending
 }
 
-func thePromptRoadMapAPIReturnsTheFollowingPromptRoadMap(arg1 *godog.Table) error {
+func thePromptRoadMapAPIReturnsTheFollowingPromptRoadMap(arg1 *godog.DocString) error {
 	return godog.ErrPending
 }
 
-func thePrompt_road_mapIsFetchedFromThePromptroadmapapiUsingThePrompt_road_map_name() error {
+func thePrompt_road_mapIsFetchedFromThePromptroadmapapiUsingThePrompt_road_map_config_name() error {
 	return godog.ErrPending
 }
 
@@ -85,27 +150,24 @@ func thePrompt_road_map_config_executionIsUpdatedWithTheCurrentStepOfThePrompt_r
 	return godog.ErrPending
 }
 
-func theValidationAPIReturnsAnErrorValidatingTheMetadata(arg1 *godog.Table) error {
-	return godog.ErrPending
-}
-
-func theValidationAPIReturnsNoErrorsValidatingTheMetadata() error {
+func theValidationAPIReturnsTheFolowingValidationResult(arg1 *godog.DocString) error {
 	return godog.ErrPending
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
-	ctx.Step(`^a message should be sent to the \'ai-requester\' queue:$`, aMessageShouldBeSentToTheAirequesterQueue)
-	ctx.Step(`^a message with the following data is sent to \'ai-prompt-builder\' queue:$`, aMessageWithTheFollowingDataIsSentToAipromptbuilderQueue)
-	ctx.Step(`^if the step is not equal to (\d+), the metadata is sent to the validation API with the metadata_validation_name$`, ifTheStepIsNotEqualToTheMetadataIsSentToTheValidationAPIWithTheMetadata_validation_name)
-	ctx.Step(`^no message should be sent to the \'ai-requester\' queue$`, noMessageShouldBeSentToTheAirequesterQueue)
+	ctx.Step(`^a message with the following data is sent to \'(.*)\' queue:$`, aMessageWithTheFollowingDataIsSentToAipromptbuilderQueue)
+	ctx.Step(`^a message with the following data should be sent to \'(.*)\' queue:$`, aMessageWithTheFollowingDataShouldBeSentToAipromptbuilderQueue)
+	ctx.Step(`^no message should be sent to the \'(.*)\' queue$`, noMessageShouldBeSentToTheAirequesterQueue)
 	ctx.Step(`^no prompt_road_map should be fetched from the prompt-road-map-api$`, noPrompt_road_mapShouldBeFetchedFromThePromptroadmapapi)
 	ctx.Step(`^no prompt_road_map_config_execution should be updated$`, noPrompt_road_map_config_executionShouldBeUpdated)
 	ctx.Step(`^the application should not retry$`, theApplicationShouldNotRetry)
+	ctx.Step(`^the application should retry$`, theApplicationShouldRetry)
 	ctx.Step(`^the message is consumed by the ai-prompt-builder consumer$`, theMessageIsConsumedByTheAipromptbuilderConsumer)
-	ctx.Step(`^The prompt road map API returns an statusCode (\d+)$`, thePromptRoadMapAPIReturnsAnStatusCode)
-	ctx.Step(`^The prompt road map API returns the following prompt road map:$`, thePromptRoadMapAPIReturnsTheFollowingPromptRoadMap)
-	ctx.Step(`^the prompt_road_map is fetched from the prompt-road-map-api using the prompt_road_map_config_name$`, thePrompt_road_mapIsFetchedFromThePromptroadmapapiUsingThePrompt_road_map_name)
-	ctx.Step(`^the prompt_road_map_config_execution is updated with the current step of the prompt_road_map$`, thePrompt_road_map_config_executionIsUpdatedWithTheCurrentStepOfThePrompt_road_map)
-	ctx.Step(`^The validation API returns an error validating the metadata:$`, theValidationAPIReturnsAnErrorValidatingTheMetadata)
-	ctx.Step(`^The validation API returns no errors validating the metadata$`, theValidationAPIReturnsNoErrorsValidatingTheMetadata)
+	ctx.Step(`^the metadata should be sent to the validation API with the metadata_validation_name \'(.*)\'$`, theMetadataShouldBeSentToTheValidationAPIWithTheMetadata_validation_nameTEST_METADATA)
+	ctx.Step(`^the metadata should not be sent to the validation API$`, theMetadataShouldNotBeSentToTheValidationAPI)
+	ctx.Step(`^The prompt road map API returns an statusCode 500$`, thePromptRoadMapAPIReturnsAnStatusCode)
+	ctx.Step(`^the prompt road map API returns the following prompt road map:$`, thePromptRoadMapAPIReturnsTheFollowingPromptRoadMap)
+	ctx.Step(`^the prompt_road_map is fetched from the prompt-road-map-api using the prompt_road_map_config_name \'(.*)\'$`, thePrompt_road_mapIsFetchedFromThePromptroadmapapiUsingThePrompt_road_map_config_name)
+	ctx.Step(`^the prompt_road_map_config_execution step_in_execution is updated to '(\d+)'$`, thePrompt_road_map_config_executionIsUpdatedWithTheCurrentStepOfThePrompt_road_map)
+	ctx.Step(`^the validation API returns the following validation result:$`, theValidationAPIReturnsTheFolowingValidationResult)
 }

@@ -2,4 +2,4 @@ build:
 	go build ./cmd/consumer
 
 wire:
-	wire ./cmd/consumer
+	wire  ./internal/config/injector

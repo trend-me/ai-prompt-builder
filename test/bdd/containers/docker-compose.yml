@@ -1,8 +1,7 @@
 version: "3.5"
-
 services:
   rabbitmq:
-    image: rabbitmq:3.7.25-management-alpine
+    image: rabbitmq:3.11.0-management-alpine
     container_name: rabbitmq-container
     environment:
       - RABBITMQ_DEFAULT_USER=rabbit
@@ -12,7 +11,7 @@ services:
       - "5672:5672"
       - "15672:15672"
     volumes:
-      - ./data/:/var/lib/rabbitmq/
-      - ./log/:/var/log/rabbitmq/
-      - ./enabled_plugins:/etc/rabbitmq/enabled_plugins:rw
-      - ./plugins:/usr/lib/rabbitmq/plugins
+      - ./rabbitmq/data/:/var/lib/rabbitmq/
+      - ./rabbitmq/log/:/var/log/rabbitmq/
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:rw
+      - ./rabbitmq/plugins:/usr/lib/rabbitmq/plugins
