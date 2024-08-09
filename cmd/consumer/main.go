@@ -8,7 +8,8 @@ import (
 )
 
 func main() {
-	consumer, err := injector.InitializeConsumer(context.Background())
+	ctx := context.Background()
+	consumer, err := injector.InitializeConsumer()
 	if err != nil {
 		slog.Error("Error initializing consumer",
 			slog.String("error", err.Error()),
@@ -16,7 +17,7 @@ func main() {
 		return
 	}
 
-	consumer()
+	_, _ = consumer(ctx)
 
 	defer connections.Disconnect()
 }
