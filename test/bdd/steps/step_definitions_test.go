@@ -8,20 +8,36 @@ import (
 	"github.com/trend-me/ai-prompt-builder/internal/config/injector"
 	"github.com/trend-me/ai-prompt-builder/internal/config/properties"
 	"github.com/trend-me/ai-prompt-builder/test/bdd/containers"
-	api_container "github.com/trend-me/ai-prompt-builder/test/bdd/containers/api"
 	rabbitmq_container "github.com/trend-me/ai-prompt-builder/test/bdd/containers/rabbitmq"
+	"github.com/vitorsalgado/mocha/v3"
+	"github.com/vitorsalgado/mocha/v3/expect"
+	"github.com/vitorsalgado/mocha/v3/params"
+	"github.com/vitorsalgado/mocha/v3/reply"
+	"io"
+	"net/http"
+	"os"
+	"strings"
 	"testing"
 	"time"
 )
 import "github.com/cucumber/godog"
 
 var (
-	t               *testing.T
-	consumedMessage string
-	consumer        func(ctx context.Context) (chan error, error)
+	t                                               *testing.T
+	consumedMessage                                 string
+	consumer                                        func(ctx context.Context) (chan error, error)
+	m                                               *mocha.Mocha
+	scopePromptRoadMapConfigsApiGetPromptRoadMap    *mocha.Scoped
+	scopePromptRoadMapConfigExecutionsApiUpdateStep *mocha.Scoped
+	scopePayloadValidationApiExecute                *mocha.Scoped
+	requestPayloadValidationApiExecute              *http.Request
 )
 
 func setup(t *testing.T) {
+	m = mocha.New(t)
+	os.Setenv("URL_API_PROMPT_ROAD_MAP", m.URL()+"/prompt_road_map_configs")
+	os.Setenv("URL_API_VALIDATION", m.URL())
+	m.Start()
 	err := godotenv.Load("../.bdd.env")
 	if err != nil {
 		t.Fatalf("Error loading .env file: %v", err)
@@ -53,6 +69,11 @@ func down(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 	err = containers.Down()
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	err = m.Close()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -107,10 +128,18 @@ func noMessageShouldBeSentToTheAirequesterQueue(queue string) error {
 }
 
 func noPrompt_road_mapShouldBeFetchedFromThePromptroadmapapi() error {
+	if scopePromptRoadMapConfigsApiGetPromptRoadMap.Called() {
+		return fmt.Errorf("prompt road map was fetched")
+	}
+
 	return nil
 }
 
 func noPrompt_road_map_config_executionShouldBeUpdated() error {
+	if scopePromptRoadMapConfigExecutionsApiUpdateStep.Called() {
+		return fmt.Errorf("prompt road map config execution step was updated")
+	}
+
 	return nil
 }
 
@@ -151,41 +180,73 @@ func theMessageIsConsumedByTheAipromptbuilderConsumer() error {
 	}
 }
 
-func theMetadataShouldBeSentToTheValidationAPIWithTheMetadata_validation_nameTEST_METADATA() error {
+func theMetadataShouldBeSentToTheValidationAPIWithTheMetadata_validation_nameTEST_METADATA(name string) error {
+	if !scopePayloadValidationApiExecute.Called() || requestPayloadValidationApiExecute == nil {
+		return fmt.Errorf("metadata was not sent to the validation API")
+	}
+
+	split := strings.Split(requestPayloadValidationApiExecute.URL.Path, "/")
+	if split[len(split)-1] != name {
+		return fmt.Errorf("metadata was not sent to the validation API with the correct metadata_validation_name. I was %s",
+			requestPayloadValidationApiExecute.URL.Path)
+	}
+
 	return nil
 }
 
 func theMetadataShouldNotBeSentToTheValidationAPI() error {
+	if scopePayloadValidationApiExecute.Called() {
+		return fmt.Errorf("metadata was sent to the validation API")
+	}
+
 	return nil
 }
 
 func thePromptRoadMapAPIReturnsAnStatusCode500() error {
-	return api_container.MockPromptRoadMapConfigsStatus(500)
+	scopePromptRoadMapConfigsApiGetPromptRoadMap = m.AddMocks(mocha.Get(expect.URLPath(fmt.Sprintf("/prompt_road_map_configs"))).
+		Reply(reply.InternalServerError().BodyString(`{"error": "Internal Server Error"}`)))
+	return nil
 }
 
 func thePromptRoadMapAPIReturnsTheFollowingPromptRoadMap(step int, name string, arg1 *godog.DocString) error {
-	return api_container.MockPromptRoadMapConfigsApiGetPromptRoadMap(name, step, arg1.Content)
+	scopePromptRoadMapConfigsApiGetPromptRoadMap = m.AddMocks(mocha.
+		Get(expect.URLPath(fmt.Sprintf("/prompt_road_map_configs/%s/prompt_road_maps/%d", name, step))).
+		Reply(reply.OK().BodyString(arg1.Content)))
+
+	return nil
 }
 
 func thePrompt_road_mapIsFetchedFromThePromptroadmapapiUsingThePrompt_road_map_config_name() error {
-	_, err := api_container.GetRequests()
+	if scopePromptRoadMapConfigsApiGetPromptRoadMap.Called() {
+		return fmt.Errorf("prompt road map was fetched")
+	}
 
-	return err
+	return nil
 }
 
-func thePrompt_road_map_config_executionIsUpdatedWithTheCurrentStepOfThePrompt_road_map() error {
+func thePrompt_road_map_config_executionIsUpdatedWithTheCurrentStepOfThePrompt_road_map(step int) error {
+	if scopePromptRoadMapConfigExecutionsApiUpdateStep.Called() && requestPayloadValidationApiExecute != nil {
+		strings.Contains(requestPayloadValidationApiExecute.URL.Path, fmt.Sprintf("/prompt_road_map_config_executions/%d", step))
+	}
 	return nil
 }
 
 func theValidationAPIReturnsTheFolowingValidationResult(arg1 *godog.DocString) error {
-	return api_container.MockPayloadValidationsApiExecuteValidation(arg1.Content)
+	scopePayloadValidationApiExecute = m.AddMocks(mocha.
+		Post(expect.URLPath(fmt.Sprintf("/payload_validations"))).
+		ReplyFunction(func(request *http.Request, r reply.M, p params.P) (*reply.Response, error) {
+			requestPayloadValidationApiExecute = request
+			return &reply.Response{
+				Status: http.StatusOK,
+				Body:   io.NopCloser(strings.NewReader(arg1.Content)),
+			}, nil
+		}))
+
+	return nil
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
-	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
-		err := api_container.Reset()
-		return ctx, err
-	})
+
 	ctx.Step(`^a message with the following data is sent to \'(.*)\' queue:$`, aMessageWithTheFollowingDataIsSentToAipromptbuilderQueue)
 	ctx.Step(`^a message with the following data should be sent to \'(.*)\' queue:$`, aMessageWithTheFollowingDataShouldBeSentToAipromptbuilderQueue)
 	ctx.Step(`^no message should be sent to the \'(.*)\' queue$`, noMessageShouldBeSentToTheAirequesterQueue)
