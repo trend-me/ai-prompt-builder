@@ -1,0 +1,31 @@
+PUT http://localhost:1080/mockserver/expectation
+Content-Type: application/json
+
+{
+  "httpRequest": {
+    "method": "POST",
+    "path": "/payload_validations/{payload_validation_name}",
+    "pathParameters": {
+      "payload_validation_name":["[A-Z0-9\\-]+"]
+    }
+  },
+"httpResponse": {
+"body": "%s"
+}
+}
+###
+
+POST http://localhost:1080/prompt_road_map_configs/TEST/prompt_road_maps
+Content-Type: application/json
+
+{
+"step": 2,
+"prompt_road_map": "TEST"
+}
+
+###
+
+PUT http://localhost:1080/mockserver/retrieve
+
+###
+
