@@ -16,6 +16,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -23,14 +24,15 @@ import (
 import "github.com/cucumber/godog"
 
 var (
-	t                                               *testing.T
-	consumedMessage                                 string
-	consumer                                        func(ctx context.Context) (chan error, error)
-	m                                               *mocha.Mocha
-	scopePromptRoadMapConfigsApiGetPromptRoadMap    *mocha.Scoped
-	scopePromptRoadMapConfigExecutionsApiUpdateStep *mocha.Scoped
-	scopePayloadValidationApiExecute                *mocha.Scoped
-	requestPayloadValidationApiExecute              *http.Request
+	t                                                 *testing.T
+	consumedMessage                                   string
+	consumer                                          func(ctx context.Context) (chan error, error)
+	m                                                 *mocha.Mocha
+	scopePromptRoadMapConfigsApiGetPromptRoadMap      *mocha.Scoped
+	scopePromptRoadMapConfigExecutionsApiUpdateStep   *mocha.Scoped
+	scopePayloadValidationApiExecute                  *mocha.Scoped
+	requestPayloadValidationApiExecute                *http.Request
+	requestPromptRoadMapConfigExecutionsApiUpdateStep *http.Request
 )
 
 func setup(t *testing.T) {
@@ -61,6 +63,15 @@ func setup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
+
+	scopePromptRoadMapConfigExecutionsApiUpdateStep = m.AddMocks(mocha.
+		Put(expect.URLPath(fmt.Sprintf("/prompt_road_map_config_executions"))).
+		ReplyFunction(func(request *http.Request, r reply.M, p params.P) (*reply.Response, error) {
+			requestPromptRoadMapConfigExecutionsApiUpdateStep = request
+			return &reply.Response{
+				Status: http.StatusOK,
+			}, nil
+		}))
 }
 
 func down(t *testing.T) {
@@ -225,9 +236,16 @@ func thePrompt_road_mapIsFetchedFromThePromptroadmapapiUsingThePrompt_road_map_c
 }
 
 func thePrompt_road_map_config_executionIsUpdatedWithTheCurrentStepOfThePrompt_road_map(step int) error {
-	if scopePromptRoadMapConfigExecutionsApiUpdateStep.Called() && requestPayloadValidationApiExecute != nil {
+	if !scopePromptRoadMapConfigExecutionsApiUpdateStep.Called() || requestPromptRoadMapConfigExecutionsApiUpdateStep == nil {
 		strings.Contains(requestPayloadValidationApiExecute.URL.Path, fmt.Sprintf("/prompt_road_map_config_executions/%d", step))
 	}
+
+	split := strings.Split(requestPromptRoadMapConfigExecutionsApiUpdateStep.URL.Path, "/")
+	if split[len(split)-1] != strconv.Itoa(step) {
+		return fmt.Errorf("prompt_road_map_config_executions step was updated with:  %s",
+			requestPromptRoadMapConfigExecutionsApiUpdateStep.URL.Path)
+	}
+
 	return nil
 }
 

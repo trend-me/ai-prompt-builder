@@ -11,12 +11,6 @@ services:
       - "5672:5672"
       - "15672:15672"
     volumes:
-      - ./rabbitmq/data/:/var/lib/rabbitmq/
-      - ./rabbitmq/log/:/var/log/rabbitmq/
+      -  ./rabbitmq/data/:/var/lib/rabbitmq/
       - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:rw
       - ./rabbitmq/plugins:/usr/lib/rabbitmq/plugins
-
-  mockServer:
-    image: mockserver/mockserver:latest
-    ports:
-      - 1080:1080
