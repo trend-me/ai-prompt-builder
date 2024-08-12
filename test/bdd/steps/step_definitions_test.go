@@ -3,6 +3,15 @@ package steps
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/cucumber/godog"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 	"github.com/trend-me/ai-prompt-builder/internal/config/injector"
@@ -13,15 +22,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/params"
 	"github.com/vitorsalgado/mocha/v3/reply"
-	"io"
-	"net/http"
-	"os"
-	"strconv"
-	"strings"
-	"testing"
-	"time"
 )
-import "github.com/cucumber/godog"
 
 var (
 	t                                                 *testing.T
@@ -37,9 +38,10 @@ var (
 
 func setup(t *testing.T) {
 	m = mocha.New(t)
-	os.Setenv("URL_API_PROMPT_ROAD_MAP", m.URL()+"/prompt_road_map_configs")
-	os.Setenv("URL_API_VALIDATION", m.URL())
 	m.Start()
+	os.Setenv("URL_API_PROMPT_ROAD_MAP_CONFIG", m.URL()+"/prompt_road_map_configs")
+	os.Setenv("URL_API_PROMPT_ROAD_MAP_CONFIG_EXECUTION", m.URL()+"/prompt_road_map_config_executions")
+	os.Setenv("URL_API_VALIDATION", m.URL()+"/payload_validations")
 	err := godotenv.Load("../.bdd.env")
 	if err != nil {
 		t.Fatalf("Error loading .env file: %v", err)
@@ -65,7 +67,13 @@ func setup(t *testing.T) {
 	}
 
 	scopePromptRoadMapConfigExecutionsApiUpdateStep = m.AddMocks(mocha.
-		Put(expect.URLPath(fmt.Sprintf("/prompt_road_map_config_executions"))).
+		Patch(expect.Func(func(v any, a expect.Args) (bool, error) {
+			if !strings.Contains(a.RequestInfo.Request.URL.Path, "/prompt_road_map_config_executions") {
+				return false, nil
+			}
+
+			return true, nil
+		})).
 		ReplyFunction(func(request *http.Request, r reply.M, p params.P) (*reply.Response, error) {
 			requestPromptRoadMapConfigExecutionsApiUpdateStep = request
 			return &reply.Response{
@@ -214,7 +222,13 @@ func theMetadataShouldNotBeSentToTheValidationAPI() error {
 }
 
 func thePromptRoadMapAPIReturnsAnStatusCode500() error {
-	scopePromptRoadMapConfigsApiGetPromptRoadMap = m.AddMocks(mocha.Get(expect.URLPath(fmt.Sprintf("/prompt_road_map_configs"))).
+	scopePromptRoadMapConfigsApiGetPromptRoadMap = m.AddMocks(mocha.Get(expect.Func(func(v any, a expect.Args) (bool, error) {
+		if !strings.Contains(a.RequestInfo.Request.URL.Path, "/prompt_road_map_configs") {
+			return false, nil
+		}
+
+		return true, nil
+	})).
 		Reply(reply.InternalServerError().BodyString(`{"error": "Internal Server Error"}`)))
 	return nil
 }
@@ -236,8 +250,9 @@ func thePrompt_road_mapIsFetchedFromThePromptroadmapapiUsingThePrompt_road_map_c
 }
 
 func thePrompt_road_map_config_executionIsUpdatedWithTheCurrentStepOfThePrompt_road_map(step int) error {
+
 	if !scopePromptRoadMapConfigExecutionsApiUpdateStep.Called() || requestPromptRoadMapConfigExecutionsApiUpdateStep == nil {
-		strings.Contains(requestPayloadValidationApiExecute.URL.Path, fmt.Sprintf("/prompt_road_map_config_executions/%d", step))
+		return fmt.Errorf("prompt_road_map_config_executions step was not updated")
 	}
 
 	split := strings.Split(requestPromptRoadMapConfigExecutionsApiUpdateStep.URL.Path, "/")
@@ -251,7 +266,7 @@ func thePrompt_road_map_config_executionIsUpdatedWithTheCurrentStepOfThePrompt_r
 
 func theValidationAPIReturnsTheFolowingValidationResult(arg1 *godog.DocString) error {
 	scopePayloadValidationApiExecute = m.AddMocks(mocha.
-		Post(expect.URLPath(fmt.Sprintf("/payload_validations"))).
+		Post(expect.URLPath("/payload_validations")).
 		ReplyFunction(func(request *http.Request, r reply.M, p params.P) (*reply.Response, error) {
 			requestPayloadValidationApiExecute = request
 			return &reply.Response{

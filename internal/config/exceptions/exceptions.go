@@ -54,7 +54,7 @@ func NewGetPromptRoadMapError(messages ...string) ErrorType {
 	}
 }
 
-func NewPromptRoadMapNotFoundError(messages ...string) ErrorType {
+func NewPromptRoadMapConfigNotFoundError(messages ...string) ErrorType {
 	return ErrorType{
 		Abort:     true,
 		Notify:    true,

@@ -3,29 +3,31 @@ package usecases
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
+
 	"github.com/trend-me/ai-prompt-builder/internal/config/exceptions"
 	"github.com/trend-me/ai-prompt-builder/internal/domain/builders"
 	"github.com/trend-me/ai-prompt-builder/internal/domain/interfaces"
 	"github.com/trend-me/ai-prompt-builder/internal/domain/models"
-	"log/slog"
 )
 
 type UseCase struct {
-	apiPromptRoadMap interfaces.ApiPromptRoadMap
-	apiValidation    interfaces.ApiValidation
-	queueAiRequester interfaces.QueueAiRequester
+	apiPromptRoadMapConfig          interfaces.ApiPromptRoadMapConfig
+	apiPromptRoadMapConfigExecution interfaces.ApiPromptRoadMapConfigExecution
+	apiValidation                   interfaces.ApiValidation
+	queueAiRequester                interfaces.QueueAiRequester
 }
 
 func (u UseCase) Handle(ctx context.Context, request *models.Request) error {
 	slog.InfoContext(ctx, "useCase.Handle",
 		slog.String("details", "process started"))
 
-	promptRoadMap, err := u.apiPromptRoadMap.GetPromptRoadMap(ctx, request.PromptRoadMapConfigName, request.PromptRoadMapStep)
+	promptRoadMap, err := u.apiPromptRoadMapConfig.GetPromptRoadMap(ctx, request.PromptRoadMapConfigName, request.PromptRoadMapStep)
 	if err != nil {
 		return err
 	}
 
-	err = u.apiPromptRoadMap.UpdatePromptRoadMapConfigExecution(ctx, &models.PromptRoadMapConfigExecution{
+	err = u.apiPromptRoadMapConfigExecution.UpdatePromptRoadMapConfigExecution(ctx, &models.PromptRoadMapConfigExecution{
 		Id:              &request.PromptRoadMapConfigExecutionId,
 		StepInExecution: promptRoadMap.Step,
 	})
@@ -77,10 +79,11 @@ func (u UseCase) validateMetadata(ctx context.Context, promptRoadMap *models.Pro
 	return nil
 }
 
-func NewUseCase(promptRoadMapApi interfaces.ApiPromptRoadMap, validationApi interfaces.ApiValidation, queueAiRequester interfaces.QueueAiRequester) interfaces.UseCase {
+func NewUseCase(apiPromptRoadMapConfigExecution interfaces.ApiPromptRoadMapConfigExecution, apiPromptRoadMapConfig interfaces.ApiPromptRoadMapConfig, validationApi interfaces.ApiValidation, queueAiRequester interfaces.QueueAiRequester) interfaces.UseCase {
 	return &UseCase{
-		apiPromptRoadMap: promptRoadMapApi,
-		apiValidation:    validationApi,
-		queueAiRequester: queueAiRequester,
+		apiPromptRoadMapConfig:          apiPromptRoadMapConfig,
+		apiPromptRoadMapConfigExecution: apiPromptRoadMapConfigExecution,
+		apiValidation:                   validationApi,
+		queueAiRequester:                queueAiRequester,
 	}
 }

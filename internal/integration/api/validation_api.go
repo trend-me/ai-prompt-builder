@@ -5,12 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/trend-me/ai-prompt-builder/internal/config/exceptions"
-	"github.com/trend-me/ai-prompt-builder/internal/domain/interfaces"
-	"github.com/trend-me/ai-prompt-builder/internal/domain/models"
 	"io"
 	"log/slog"
 	"net/http"
+
+	"github.com/trend-me/ai-prompt-builder/internal/config/exceptions"
+	"github.com/trend-me/ai-prompt-builder/internal/domain/interfaces"
+	"github.com/trend-me/ai-prompt-builder/internal/domain/models"
 )
 
 type (
@@ -26,10 +27,13 @@ func (v Validation) ExecutePayloadValidator(ctx context.Context, payloadValidato
 		slog.String("details", "process started"))
 
 	req, err := http.NewRequestWithContext(ctx,
-		http.MethodGet,
+		http.MethodPost,
 		fmt.Sprintf("%s/%s", v.url(), payloadValidatorName),
 		bytes.NewReader(payload),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

@@ -29,8 +29,12 @@ func QueueConnectionHost() string {
 	return os.Getenv("QUEUE_CONNECTION_HOST")
 }
 
-func UrlApiPromptRoadMap() string {
-	return os.Getenv("URL_API_PROMPT_ROAD_MAP")
+func UrlApiPromptRoadMapConfig() string {
+	return os.Getenv("URL_API_PROMPT_ROAD_MAP_CONFIG")
+}
+
+func UrlApiPromptRoadMapConfigExecution() string {
+	return os.Getenv("URL_API_PROMPT_ROAD_MAP_CONFIG_EXECUTION")
 }
 
 func UrlApiValidation() string {

@@ -21,8 +21,10 @@ import (
 // Injectors from wire.go:
 
 func InitializeConsumer() (func(context.Context) (chan error, error), error) {
-	urlApiPromptRoadMap := NewUrlApiPromptRoadMap()
-	apiPromptRoadMap := api.NewPromptRoadMap(urlApiPromptRoadMap)
+	urlApiPromptRoadMapConfigExecution := NewUrlApiPromptRoadMapConfigExecution()
+	apiPromptRoadMapConfigExecution := api.NewPromptRoadMapConfigExecution(urlApiPromptRoadMapConfigExecution)
+	urlApiPromptRoadMapConfig := NewUrlApiPromptRoadMapConfig()
+	apiPromptRoadMapConfig := api.NewPromptRoadMapConfig(urlApiPromptRoadMapConfig)
 	urlApiValidation := NewUrlApiValidation()
 	apiValidation := api.NewValidation(urlApiValidation)
 	connection, err := connections.ConnectQueue()
@@ -31,7 +33,7 @@ func InitializeConsumer() (func(context.Context) (chan error, error), error) {
 	}
 	connectionAiPromptBuilder := NewQueueNameAiPromptBuilder(connection)
 	queueAiRequester := queue.NewAiRequester(connectionAiPromptBuilder)
-	useCase := usecases.NewUseCase(apiPromptRoadMap, apiValidation, queueAiRequester)
+	useCase := usecases.NewUseCase(apiPromptRoadMapConfigExecution, apiPromptRoadMapConfig, apiValidation, queueAiRequester)
 	controller := controllers.NewController(useCase)
 	v := NewConsumer(controller, connectionAiPromptBuilder)
 	return v, nil
@@ -56,6 +58,10 @@ func NewUrlApiValidation() api.UrlApiValidation {
 	return properties.UrlApiValidation
 }
 
-func NewUrlApiPromptRoadMap() api.UrlApiPromptRoadMap {
-	return properties.UrlApiPromptRoadMap
+func NewUrlApiPromptRoadMapConfig() api.UrlApiPromptRoadMapConfig {
+	return properties.UrlApiPromptRoadMapConfig
+}
+
+func NewUrlApiPromptRoadMapConfigExecution() api.UrlApiPromptRoadMapConfigExecution {
+	return properties.UrlApiPromptRoadMapConfigExecution
 }

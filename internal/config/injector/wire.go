@@ -4,6 +4,7 @@ package injector
 
 import (
 	"context"
+
 	"github.com/google/wire"
 	"github.com/trend-me/ai-prompt-builder/internal/config/connections"
 	"github.com/trend-me/ai-prompt-builder/internal/config/properties"
@@ -36,15 +37,20 @@ func NewUrlApiValidation() api.UrlApiValidation {
 	return properties.UrlApiValidation
 }
 
-func NewUrlApiPromptRoadMap() api.UrlApiPromptRoadMap {
-	return properties.UrlApiPromptRoadMap
+func NewUrlApiPromptRoadMapConfig() api.UrlApiPromptRoadMapConfig {
+	return properties.UrlApiPromptRoadMapConfig
+}
+func NewUrlApiPromptRoadMapConfigExecution() api.UrlApiPromptRoadMapConfigExecution {
+	return properties.UrlApiPromptRoadMapConfigExecution
 }
 
 func InitializeConsumer() (func(context.Context) (chan error, error), error) {
 	wire.Build(controllers.NewController,
 		usecases.NewUseCase,
-		NewUrlApiPromptRoadMap,
-		api.NewPromptRoadMap,
+		NewUrlApiPromptRoadMapConfig,
+		NewUrlApiPromptRoadMapConfigExecution,
+		api.NewPromptRoadMapConfig,
+		api.NewPromptRoadMapConfigExecution,
 		NewUrlApiValidation,
 		api.NewValidation,
 		queue.NewAiRequester,
