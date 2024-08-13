@@ -119,7 +119,10 @@ func aMessageWithTheFollowingDataShouldBeSentToAipromptbuilderQueue(queue string
 		return err
 	}
 
-	assert.JSONEq(t, arg1.Content, string(content))
+	if !assert.JSONEq(t, arg1.Content, string(content)) {
+		return fmt.Errorf("message sent to queue '%s' is not equal to the expected message: %s. Got: %s",
+			queue, arg1.Content, string(content))
+	}
 	return nil
 }
 
@@ -138,7 +141,10 @@ func aMessageShouldBeSentToTheAirequesterQueue(queue string, arg1 *godog.DocStri
 		return err
 	}
 
-	assert.JSONEq(t, arg1.Content, string(content))
+	if !assert.JSONEq(t, arg1.Content, string(content)) {
+		return fmt.Errorf("message sent to queue '%s' is not equal to the expected message: %s. Got: %s",
+			queue, arg1.Content, string(content))
+	}
 	return nil
 }
 
@@ -167,12 +173,15 @@ func theApplicationShouldNotRetry() error {
 	return nil
 }
 
-func theApplicationShouldRetry(t *testing.T) error {
+func theApplicationShouldRetry() error {
 	content, _, err := rabbitmq_container.ConsumeMessageFromQueue(properties.QueueNameAiPromptBuilder)
 	if err != nil {
 		return err
 	}
-	assert.JSONEq(t, string(content), consumedMessage)
+	if !assert.JSONEq(t, string(content), consumedMessage) {
+		return fmt.Errorf("message sent to queue '%s' is not equal to the expected message: %s. Got: %s",
+			properties.QueueNameAiPromptBuilder, consumedMessage, string(content))
+	}
 	return nil
 }
 

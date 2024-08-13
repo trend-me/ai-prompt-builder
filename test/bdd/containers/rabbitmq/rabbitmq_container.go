@@ -68,18 +68,26 @@ func ConsumeMessageFromQueue(name string) (content []byte, headers map[string]in
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	errCh, err := q.Consume(ctx, func(delivery amqp091.Delivery) error {
-		content = delivery.Body
-		headers = delivery.Headers
-		cancel()
-		return nil
-	})
-	<-errCh
+	done := make(chan struct{})
 
-	ctx.Done()
+	go func() {
+		_, err = q.Consume(ctx, func(delivery amqp091.Delivery) error {
+			content = delivery.Body
+			headers = delivery.Headers
+			cancel()
+			close(done)
+			return nil
+		})
 
-	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
-		return nil, nil, err
+		if err != nil && !errors.Is(err, context.DeadlineExceeded) {
+			close(done)
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+	case <-done:
 	}
+
 	return
 }
