@@ -92,5 +92,5 @@ func replaceTags(template string, metadata map[string]interface{}) (string, erro
 	return result, nil
 }
 func BuildPrompt(request *models.Request, promptRoadMap *models.PromptRoadMap) (string, error) {
-	return replaceTags(*promptRoadMap.QuestionTemplate, request.Metadata)
+	return replaceTags(promptRoadMap.QuestionTemplate, request.Metadata)
 }

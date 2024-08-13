@@ -27,10 +27,7 @@ func (u UseCase) Handle(ctx context.Context, request *models.Request) error {
 		return err
 	}
 
-	err = u.apiPromptRoadMapConfigExecution.UpdatePromptRoadMapConfigExecution(ctx, &models.PromptRoadMapConfigExecution{
-		Id:              &request.PromptRoadMapConfigExecutionId,
-		StepInExecution: promptRoadMap.Step,
-	})
+	err = u.apiPromptRoadMapConfigExecution.UpdateStepInExecutionById(ctx, request.PromptRoadMapConfigExecutionId, promptRoadMap.Step)
 	if err != nil {
 		return err
 	}
@@ -56,13 +53,13 @@ func (u UseCase) Handle(ctx context.Context, request *models.Request) error {
 }
 
 func (u UseCase) validateMetadata(ctx context.Context, promptRoadMap *models.PromptRoadMap, request *models.Request) error {
-	if *promptRoadMap.Step > 1 {
+	if promptRoadMap.Step > 1 {
 		payload, err := json.Marshal(request.Metadata)
 		if err != nil {
 			return exceptions.NewValidationError(err.Error())
 		}
 
-		payloadValidationExecutionResponse, err := u.apiValidation.ExecutePayloadValidator(ctx, *promptRoadMap.MetadataValidationName, payload)
+		payloadValidationExecutionResponse, err := u.apiValidation.ExecutePayloadValidator(ctx, promptRoadMap.MetadataValidationName, payload)
 		if err != nil {
 			return err
 		}

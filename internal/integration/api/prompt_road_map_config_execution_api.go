@@ -6,10 +6,10 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/trend-me/ai-prompt-builder/internal/config/exceptions"
 	"github.com/trend-me/ai-prompt-builder/internal/domain/interfaces"
-	"github.com/trend-me/ai-prompt-builder/internal/domain/models"
 )
 
 type (
@@ -20,18 +20,23 @@ type (
 	}
 )
 
-func (p PromptRoadMapConfigExecution) UpdatePromptRoadMapConfigExecution(ctx context.Context, promptRoadMapConfigExecution *models.PromptRoadMapConfigExecution) error {
-	slog.InfoContext(ctx, "PromptRoadMap.UpdatePromptRoadMapConfigExecution",
-		slog.String("details", "process started"))
+func (p PromptRoadMapConfigExecution) UpdateStepInExecutionById(ctx context.Context, id string, stepInExecution int) error {
+	slog.InfoContext(ctx, "PromptRoadMap.UpdateStepInExecutionById",
+		slog.String("details", "process started"),
+		slog.String("id", id),
+		slog.Int("stepInExecution", stepInExecution),
+	)
 
-	if promptRoadMapConfigExecution.Id == nil {
-		return exceptions.NewValidationError("'id' is required to update prompt_road_map_config_execution")
-	}
+	reqBodyStr := fmt.Sprintf(`{"step_in_execution": %d}`, stepInExecution)
+
+	reqBody := io.NopCloser(
+		strings.NewReader(reqBodyStr),
+	)
 
 	req, err := http.NewRequestWithContext(ctx,
 		http.MethodPatch,
-		fmt.Sprintf("%s/%s", p.url(), *promptRoadMapConfigExecution.Id),
-		nil,
+		fmt.Sprintf("%s/%s", p.url(), id),
+		reqBody,
 	)
 	if err != nil {
 		return err
@@ -50,7 +55,7 @@ func (p PromptRoadMapConfigExecution) UpdatePromptRoadMapConfigExecution(ctx con
 	}(resp.Body)
 
 	body, _ := io.ReadAll(resp.Body)
-	slog.DebugContext(ctx, "PromptRoadMap.UpdatePromptRoadMapConfigExecution",
+	slog.DebugContext(ctx, "PromptRoadMap.UpdateStepInExecutionById",
 		slog.String("details", "requested"),
 		slog.String("response", string(body)),
 		slog.String("status", resp.Status),

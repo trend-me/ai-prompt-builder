@@ -24,7 +24,9 @@ type (
 
 func (v Validation) ExecutePayloadValidator(ctx context.Context, payloadValidatorName string, payload []byte) (*models.PayloadValidatorExecutionResponse, error) {
 	slog.InfoContext(ctx, "Validation.ExecutePayloadValidator",
-		slog.String("details", "process started"))
+		slog.String("details", "process started"),
+		slog.String("payloadValidatorName", payloadValidatorName),
+	)
 
 	req, err := http.NewRequestWithContext(ctx,
 		http.MethodPost,
