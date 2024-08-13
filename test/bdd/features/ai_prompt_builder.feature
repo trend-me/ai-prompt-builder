@@ -24,7 +24,7 @@ Feature: Build AI prompts and forward the event to ai-requester queue
     "updated_at":"2024-08-01T20:53:49.132Z"
     }
     """
-    Given the validation API returns the following validation result:
+    Given the validation API returns the following validation result for payload_validation 'TEST_METADATA':
     """
     {
       "failures": "",
