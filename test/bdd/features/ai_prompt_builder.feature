@@ -32,7 +32,7 @@ Feature: Build AI prompts and forward the event to ai-requester queue
     }
     """
     When the message is consumed by the ai-prompt-builder consumer
-    Then the prompt_road_map is fetched from the prompt-road-map-api using the prompt_road_map_config_name 'TEST'
+    Then the prompt_road_map is fetched from the prompt-road-map-api using the prompt_road_map_config_name 'TEST' and step '2'
     And the prompt_road_map_config_execution step_in_execution is updated to '2'
     And the metadata should be sent to the validation API with the metadata_validation_name 'TEST_METADATA'
     And a message should be sent to the 'ai-requester' queue:
