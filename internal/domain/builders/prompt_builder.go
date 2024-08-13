@@ -56,7 +56,7 @@ func replaceTags(template string, metadata map[string]interface{}) (string, erro
 			}
 			if strings.Contains(part, "[") {
 				slice := toAnySlice(value)
-				if slice != nil {
+				if slice == nil {
 					errors += fmt.Sprintf("part '%s'should be an array. tag: '%s';", part, tag)
 					return tag
 				}

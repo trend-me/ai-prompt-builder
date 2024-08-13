@@ -69,7 +69,7 @@ func (u UseCase) validateMetadata(ctx context.Context, promptRoadMap *models.Pro
 			slog.String("details", "metadata validation"),
 			slog.String("details", string(bPayloadValidationExecutionResponse)))
 
-		if payloadValidationExecutionResponse.Failures != nil {
+		if payloadValidationExecutionResponse.Failures != nil && len(*payloadValidationExecutionResponse.Failures) > 0 {
 			return exceptions.NewMetadataValidationError(*payloadValidationExecutionResponse.Failures)
 		}
 	}
