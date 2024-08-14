@@ -34,11 +34,12 @@ func (a AiRequester) Publish(ctx context.Context, prompt string, request *models
 		slog.String("details", "process started"))
 
 	b, err := json.Marshal(aiRequesterMessage{
-		PromptRoadMapConfigName: request.PromptRoadMapConfigName,
-		OutputQueue:             request.OutputQueue,
-		Model:                   request.Model,
-		Prompt:                  prompt,
-		Metadata:                request.Metadata,
+		PromptRoadMapConfigName:        request.PromptRoadMapConfigName,
+		PromptRoadMapConfigExecutionId: request.PromptRoadMapConfigExecutionId,
+		OutputQueue:                    request.OutputQueue,
+		Model:                          request.Model,
+		Prompt:                         prompt,
+		Metadata:                       request.Metadata,
 	})
 	if err != nil {
 		return exceptions.NewValidationError("error parsing ai-requester message", err.Error())

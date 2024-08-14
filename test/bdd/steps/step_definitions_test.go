@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -37,6 +38,19 @@ var (
 	requestPromptRoadMapConfigExecutionsApiUpdateStep *http.Request
 	requestPromptRoadMapConfigsApiGetPromptRoadMap    *http.Request
 )
+
+func jsonEqual(a, b string) bool {
+	var j1, j2 map[string]interface{}
+
+	if err := json.Unmarshal([]byte(a), &j1); err != nil {
+		return false
+	}
+	if err := json.Unmarshal([]byte(b), &j2); err != nil {
+		return false
+	}
+
+	return reflect.DeepEqual(j1, j2)
+}
 
 func setup(t *testing.T) {
 	m = mocha.New(t)
@@ -120,7 +134,7 @@ func aMessageWithTheFollowingDataShouldBeSentToAipromptbuilderQueue(queue string
 		return err
 	}
 
-	if !assert.JSONEq(t, arg1.Content, string(content)) {
+	if !jsonEqual(arg1.Content, string(content)) {
 		return fmt.Errorf("message sent to queue '%s' is not equal to the expected message: %s. Got: %s",
 			queue, arg1.Content, string(content))
 	}
@@ -142,7 +156,7 @@ func aMessageShouldBeSentToTheAirequesterQueue(queue string, arg1 *godog.DocStri
 		return err
 	}
 
-	if !assert.JSONEq(t, arg1.Content, string(content)) {
+	if !jsonEqual(arg1.Content, string(content)) {
 		return fmt.Errorf("message sent to queue '%s' is not equal to the expected message: %s. Got: %s",
 			queue, arg1.Content, string(content))
 	}
@@ -179,7 +193,7 @@ func theApplicationShouldRetry() error {
 	if err != nil {
 		return err
 	}
-	if !assert.JSONEq(t, string(content), consumedMessage) {
+	if !jsonEqual(string(content), consumedMessage) {
 		return fmt.Errorf("message sent to queue '%s' is not equal to the expected message: %s. Got: %s",
 			properties.QueueNameAiPromptBuilder, consumedMessage, string(content))
 	}
