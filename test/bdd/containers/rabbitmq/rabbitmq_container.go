@@ -2,9 +2,8 @@ package rabbitmq_container
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"github.com/rabbitmq/amqp091-go"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/trend-me/golang-rabbitmq-lib/rabbitmq"
 	"time"
 )
@@ -59,35 +58,56 @@ func PostMessageToQueue(name string, content []byte) error {
 }
 
 func ConsumeMessageFromQueue(name string) (content []byte, headers map[string]interface{}, err error) {
-	q := queues[name]
-	if q == nil {
-		err = fmt.Errorf("queue %s not initialized", name)
-		return
+	// Connect to RabbitMQ server
+	conn, err := amqp.Dial("amqp://rabbit:rabbit@localhost:5672/")
+	if err != nil {
+		return nil, nil, err
+	}
+	defer conn.Close()
+
+	// Open a channel
+	ch, err := conn.Channel()
+	if err != nil {
+		return nil, nil, err
+	}
+	defer func(ch *amqp.Channel) {
+		_ = ch.Close()
+	}(ch)
+
+	// Declare a queue (optional, depending on if it's already declared)
+	q, err := ch.QueueDeclare(
+		name,  // queue name
+		false, // durable
+		false, // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
+	)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
+	// Consume messages from the queue
+	msgs, err := ch.Consume(
+		q.Name, // queue name
+		"",     // consumer
+		false,  // auto-ack
+		false,  // exclusive
+		false,  // no-local
+		false,  // no-wait
+		nil,    // arguments
+	)
+	if err != nil {
+		return nil, nil, err
+	}
 
-	done := make(chan struct{})
-
-	go func() {
-		_, err = q.Consume(ctx, func(delivery amqp091.Delivery) error {
-			content = delivery.Body
-			headers = delivery.Headers
-			cancel()
-			close(done)
-			return nil
-		})
-
-		if err != nil && !errors.Is(err, context.DeadlineExceeded) {
-			close(done)
-		}
-	}()
-
+	timeout := time.After(10 * time.Second)
 	select {
-	case <-ctx.Done():
-	case <-done:
+	case d := <-msgs:
+		content = d.Body
+		headers = d.Headers
+	case <-timeout:
 	}
 
-	return
+	return content, headers, nil
 }

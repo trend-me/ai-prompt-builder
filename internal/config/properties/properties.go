@@ -11,6 +11,7 @@ type contextKey = string
 const (
 	ctxReceiveCount          contextKey = "ctxReceiveCount"
 	QueueNameAiPromptBuilder            = "ai-prompt-builder"
+	QueueAiRequester                    = "ai-requester"
 )
 
 func CreateQueueIfNX() bool {

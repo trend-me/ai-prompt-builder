@@ -7,7 +7,6 @@
 package injector
 
 import (
-	"context"
 	"github.com/trend-me/ai-prompt-builder/internal/config/connections"
 	"github.com/trend-me/ai-prompt-builder/internal/config/properties"
 	"github.com/trend-me/ai-prompt-builder/internal/delivery/controllers"
@@ -20,7 +19,7 @@ import (
 
 // Injectors from wire.go:
 
-func InitializeConsumer() (func(context.Context) (chan error, error), error) {
+func InitializeConsumer() (interfaces.QueueAiPromptBuilder, error) {
 	urlApiPromptRoadMapConfigExecution := NewUrlApiPromptRoadMapConfigExecution()
 	apiPromptRoadMapConfigExecution := api.NewPromptRoadMapConfigExecution(urlApiPromptRoadMapConfigExecution)
 	urlApiPromptRoadMapConfig := NewUrlApiPromptRoadMapConfig()
@@ -31,27 +30,33 @@ func InitializeConsumer() (func(context.Context) (chan error, error), error) {
 	if err != nil {
 		return nil, err
 	}
-	connectionAiPromptBuilder := NewQueueNameAiPromptBuilder(connection)
-	queueAiRequester := queue.NewAiRequester(connectionAiPromptBuilder)
+	connectionAiRequester := NewQueueAiRequesterConnection(connection)
+	queueAiRequester := queue.NewAiRequester(connectionAiRequester)
 	useCase := usecases.NewUseCase(apiPromptRoadMapConfigExecution, apiPromptRoadMapConfig, apiValidation, queueAiRequester)
 	controller := controllers.NewController(useCase)
-	v := NewConsumer(controller, connectionAiPromptBuilder)
-	return v, nil
+	connectionAiPromptBuilder := NewQueueAiPromptBuilderConnection(connection)
+	queueAiPromptBuilder := NewConsumer(controller, connectionAiPromptBuilder)
+	return queueAiPromptBuilder, nil
 }
 
 // wire.go:
 
-func NewQueueNameAiPromptBuilder(connection *rabbitmq.Connection) queue.ConnectionAiPromptBuilder {
+func NewQueueAiPromptBuilderConnection(connection *rabbitmq.Connection) queue.ConnectionAiPromptBuilder {
 	return rabbitmq.NewQueue(
 		connection, properties.QueueNameAiPromptBuilder, rabbitmq.ContentTypeJson, properties.CreateQueueIfNX(), true,
 		true,
 	)
 }
 
-func NewConsumer(controller interfaces.Controller, connectionAiPromptBuilder queue.ConnectionAiPromptBuilder) func(context.Context) (chan error, error) {
-	return func(ctx context.Context) (chan error, error) {
-		return connectionAiPromptBuilder.Consume(ctx, controller.Handle)
-	}
+func NewQueueAiRequesterConnection(connection *rabbitmq.Connection) queue.ConnectionAiRequester {
+	return rabbitmq.NewQueue(
+		connection, properties.QueueAiRequester, rabbitmq.ContentTypeJson, properties.CreateQueueIfNX(), true,
+		true,
+	)
+}
+
+func NewConsumer(controller interfaces.Controller, connectionAiPromptBuilder queue.ConnectionAiPromptBuilder) interfaces.QueueAiPromptBuilder {
+	return queue.NewAiPromptBuilder(connectionAiPromptBuilder, controller)
 }
 
 func NewUrlApiValidation() api.UrlApiValidation {

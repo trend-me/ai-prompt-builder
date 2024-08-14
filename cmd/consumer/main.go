@@ -17,7 +17,7 @@ func main() {
 		return
 	}
 
-	_, _ = consumer(ctx)
+	_, _ = consumer.Consume(ctx)
 
 	defer connections.Disconnect()
 }

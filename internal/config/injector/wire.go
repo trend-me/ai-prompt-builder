@@ -3,8 +3,6 @@
 package injector
 
 import (
-	"context"
-
 	"github.com/google/wire"
 	"github.com/trend-me/ai-prompt-builder/internal/config/connections"
 	"github.com/trend-me/ai-prompt-builder/internal/config/properties"
@@ -16,7 +14,7 @@ import (
 	"github.com/trend-me/golang-rabbitmq-lib/rabbitmq"
 )
 
-func NewQueueNameAiPromptBuilder(connection *rabbitmq.Connection) queue.ConnectionAiPromptBuilder {
+func NewQueueAiPromptBuilderConnection(connection *rabbitmq.Connection) queue.ConnectionAiPromptBuilder {
 	return rabbitmq.NewQueue(
 		connection,
 		properties.QueueNameAiPromptBuilder,
@@ -27,10 +25,19 @@ func NewQueueNameAiPromptBuilder(connection *rabbitmq.Connection) queue.Connecti
 	)
 }
 
-func NewConsumer(controller interfaces.Controller, connectionAiPromptBuilder queue.ConnectionAiPromptBuilder) func(context.Context) (chan error, error) {
-	return func(ctx context.Context) (chan error, error) {
-		return connectionAiPromptBuilder.Consume(ctx, controller.Handle)
-	}
+func NewQueueAiRequesterConnection(connection *rabbitmq.Connection) queue.ConnectionAiRequester {
+	return rabbitmq.NewQueue(
+		connection,
+		properties.QueueAiRequester,
+		rabbitmq.ContentTypeJson,
+		properties.CreateQueueIfNX(),
+		true,
+		true,
+	)
+}
+
+func NewConsumer(controller interfaces.Controller, connectionAiPromptBuilder queue.ConnectionAiPromptBuilder) interfaces.QueueAiPromptBuilder {
+	return queue.NewAiPromptBuilder(connectionAiPromptBuilder, controller)
 }
 
 func NewUrlApiValidation() api.UrlApiValidation {
@@ -40,11 +47,12 @@ func NewUrlApiValidation() api.UrlApiValidation {
 func NewUrlApiPromptRoadMapConfig() api.UrlApiPromptRoadMapConfig {
 	return properties.UrlApiPromptRoadMapConfig
 }
+
 func NewUrlApiPromptRoadMapConfigExecution() api.UrlApiPromptRoadMapConfigExecution {
 	return properties.UrlApiPromptRoadMapConfigExecution
 }
 
-func InitializeConsumer() (func(context.Context) (chan error, error), error) {
+func InitializeConsumer() (interfaces.QueueAiPromptBuilder, error) {
 	wire.Build(controllers.NewController,
 		usecases.NewUseCase,
 		NewUrlApiPromptRoadMapConfig,
@@ -54,7 +62,8 @@ func InitializeConsumer() (func(context.Context) (chan error, error), error) {
 		NewUrlApiValidation,
 		api.NewValidation,
 		queue.NewAiRequester,
-		NewQueueNameAiPromptBuilder,
+		NewQueueAiRequesterConnection,
+		NewQueueAiPromptBuilderConnection,
 		connections.ConnectQueue,
 		NewConsumer)
 	return nil, nil

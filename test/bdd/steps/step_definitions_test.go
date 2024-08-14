@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/trend-me/ai-prompt-builder/internal/domain/interfaces"
 	"io"
 	"net/http"
 	"os"
@@ -27,7 +28,7 @@ import (
 var (
 	t                                                 *testing.T
 	consumedMessage                                   string
-	consumer                                          func(ctx context.Context) (chan error, error)
+	consumer                                          interfaces.QueueAiPromptBuilder
 	m                                                 *mocha.Mocha
 	scopePromptRoadMapConfigsApiGetPromptRoadMap      *mocha.Scoped
 	scopePromptRoadMapConfigExecutionsApiUpdateStep   *mocha.Scoped
@@ -188,7 +189,7 @@ func theApplicationShouldRetry() error {
 func theMessageIsConsumedByTheAipromptbuilderConsumer() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	errCh, err := consumer(ctx)
+	errCh, err := consumer.Consume(ctx)
 	if err != nil {
 		return err
 	}
