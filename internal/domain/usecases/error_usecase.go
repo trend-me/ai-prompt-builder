@@ -3,9 +3,10 @@ package usecases
 import (
 	"context"
 	"errors"
+	"log/slog"
+
 	"github.com/trend-me/ai-prompt-builder/internal/config/exceptions"
 	"github.com/trend-me/ai-prompt-builder/internal/config/properties"
-	"log/slog"
 )
 
 func (u UseCase) HandleError(ctx context.Context, err error) error {
@@ -30,5 +31,5 @@ func (u UseCase) HandleError(ctx context.Context, err error) error {
 		return nil
 	}
 
-	return nil
+	return errParsed
 }

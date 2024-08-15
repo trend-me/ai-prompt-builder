@@ -156,7 +156,7 @@ func noMessageShouldBeSentToTheAirequesterQueue(queue string) error {
 }
 
 func noPrompt_road_mapShouldBeFetchedFromThePromptroadmapapi() error {
-	if scopePromptRoadMapConfigsApiGetPromptRoadMap.Called() {
+	if scopePromptRoadMapConfigsApiGetPromptRoadMap !=nil && scopePromptRoadMapConfigsApiGetPromptRoadMap.Called() {
 		return fmt.Errorf("prompt road map was fetched")
 	}
 
@@ -236,8 +236,14 @@ func theMetadataShouldNotBeSentToTheValidationAPI() error {
 func thePromptRoadMapAPIReturnsAnStatusCode500() error {
 	scopePromptRoadMapConfigsApiGetPromptRoadMap = m.AddMocks(mocha.Get(expect.Func(func(v any, a expect.Args) (bool, error) {
 		return strings.Contains(a.RequestInfo.Request.URL.Path, "/prompt_road_map_configs"), nil
-	})).
-		Reply(reply.InternalServerError().BodyString(`{"error": "Internal Server Error"}`)))
+	})).ReplyFunction(func(r *http.Request, _ reply.M, _ params.P) (*reply.Response, error){
+		requestPromptRoadMapConfigsApiGetPromptRoadMap = r
+		return &reply.Response{
+			 Status: http.StatusInternalServerError,
+			 Body:  io.NopCloser(strings.NewReader(`{"error": "Internal Server Error"}`)),
+		}, nil
+	}))
+
 	return nil
 }
 
@@ -255,7 +261,7 @@ func thePromptRoadMapAPIReturnsTheFollowingPromptRoadMap(step int, name string, 
 }
 
 func thePrompt_road_mapIsFetchedFromThePromptroadmapapiUsingThePrompt_road_map_config_name(name string, step int) error {
-	if !scopePromptRoadMapConfigsApiGetPromptRoadMap.Called() {
+	if scopePromptRoadMapConfigsApiGetPromptRoadMap == nil || !scopePromptRoadMapConfigsApiGetPromptRoadMap.Called() || requestPromptRoadMapConfigsApiGetPromptRoadMap == nil {
 		return fmt.Errorf("prompt road map was not fetched")
 	}
 
@@ -295,7 +301,7 @@ func thePrompt_road_map_config_executionIsUpdatedWithTheCurrentStepOfThePrompt_r
 	return nil
 }
 
-func theValidationAPIReturnsTheFolowingValidationResult(name string, arg1 *godog.DocString) error {
+func theValidationAPIReturnsTheFollowingValidationResult(name string, arg1 *godog.DocString) error {
 	scopePayloadValidationApiExecute = m.AddMocks(mocha.
 		Post(expect.URLPath(fmt.Sprintf("/payload_validations/%s", name))).
 		ReplyFunction(func(request *http.Request, r reply.M, p params.P) (*reply.Response, error) {
@@ -351,5 +357,5 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the prompt road map API returns the following prompt road map for step \'(\d+)\' and prompt_road_map_config_name \'(.*)\':$`, thePromptRoadMapAPIReturnsTheFollowingPromptRoadMap)
 	ctx.Step(`^the prompt_road_map is fetched from the prompt-road-map-api using the prompt_road_map_config_name \'(.*)\' and step \'(\d+)\'$`, thePrompt_road_mapIsFetchedFromThePromptroadmapapiUsingThePrompt_road_map_config_name)
 	ctx.Step(`^the prompt_road_map_config_execution step_in_execution is updated to \'(\d+)\'$`, thePrompt_road_map_config_executionIsUpdatedWithTheCurrentStepOfThePrompt_road_map)
-	ctx.Step(`^the validation API returns the following validation result for payload_validation \'(.*)\':$`, theValidationAPIReturnsTheFolowingValidationResult)
+	ctx.Step(`^the validation API returns the following validation result for payload_validation \'(.*)\':$`, theValidationAPIReturnsTheFollowingValidationResult)
 }
