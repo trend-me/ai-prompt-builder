@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -21,6 +20,7 @@ import (
 	"github.com/trend-me/ai-prompt-builder/internal/config/properties"
 	"github.com/trend-me/ai-prompt-builder/test/bdd/containers"
 	rabbitmq_container "github.com/trend-me/ai-prompt-builder/test/bdd/containers/rabbitmq"
+	"github.com/trend-me/ai-prompt-builder/test/bdd/utils"
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/params"
@@ -40,18 +40,7 @@ var (
 	requestPromptRoadMapConfigsApiGetPromptRoadMap    *http.Request
 )
 
-func jsonEqual(a, b string) bool {
-	var j1, j2 map[string]interface{}
 
-	if err := json.Unmarshal([]byte(a), &j1); err != nil {
-		return false
-	}
-	if err := json.Unmarshal([]byte(b), &j2); err != nil {
-		return false
-	}
-
-	return reflect.DeepEqual(j1, j2)
-}
 
 func setup(t *testing.T) {
 	m = mocha.New(t)
@@ -135,7 +124,7 @@ func aMessageWithTheFollowingDataShouldBeSentToAipromptbuilderQueue(queue string
 		return err
 	}
 
-	if !jsonEqual(arg1.Content, string(content)) {
+	if !utils.JsonEqual(arg1.Content, string(content)) {
 		return fmt.Errorf("message sent to queue '%s' is not equal to the expected message: %s. Got: %s",
 			queue, arg1.Content, string(content))
 	}
@@ -164,7 +153,7 @@ func noPrompt_road_mapShouldBeFetchedFromThePromptroadmapapi() error {
 }
 
 func noPrompt_road_map_config_executionShouldBeUpdated() error {
-	if scopePromptRoadMapConfigExecutionsApiUpdateStep.Called() {
+	if scopePromptRoadMapConfigExecutionsApiUpdateStep != nil && scopePromptRoadMapConfigExecutionsApiUpdateStep.Called() {
 		return fmt.Errorf("prompt road map config execution step was updated")
 	}
 
@@ -185,7 +174,7 @@ func theApplicationShouldRetry() error {
 	if err != nil {
 		return err
 	}
-	if !jsonEqual(string(content), consumedMessage) {
+	if !utils.JsonEqual(string(content), consumedMessage) {
 		return fmt.Errorf("message sent to queue '%s' is not equal to the expected message: %s. Got: %s",
 			properties.QueueNameAiPromptBuilder, consumedMessage, string(content))
 	}
@@ -318,9 +307,22 @@ func theValidationAPIReturnsTheFollowingValidationResult(name string, arg1 *godo
 func InitializeScenario(ctx *godog.ScenarioContext) {
 
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
-		scopePromptRoadMapConfigsApiGetPromptRoadMap = nil
-		scopePromptRoadMapConfigExecutionsApiUpdateStep = nil
-		scopePayloadValidationApiExecute = nil
+		if scopePromptRoadMapConfigsApiGetPromptRoadMap != nil {
+			scopePromptRoadMapConfigsApiGetPromptRoadMap.Clean()
+			scopePromptRoadMapConfigsApiGetPromptRoadMap = nil
+		}
+
+		if scopePromptRoadMapConfigExecutionsApiUpdateStep != nil {
+			scopePromptRoadMapConfigExecutionsApiUpdateStep.Clean()
+			scopePromptRoadMapConfigExecutionsApiUpdateStep = nil 
+		}
+
+		if scopePayloadValidationApiExecute != nil {
+			scopePayloadValidationApiExecute.Clean()
+			scopePayloadValidationApiExecute = nil
+		}
+
+		scopePayloadValidationApiExecute = nil 
 		requestPayloadValidationApiExecute = nil
 		requestPromptRoadMapConfigExecutionsApiUpdateStep = nil
 		requestPromptRoadMapConfigsApiGetPromptRoadMap = nil
@@ -340,6 +342,8 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 					Status: http.StatusOK,
 				}, nil
 			}))
+
+		_ = rabbitmq_container.PurgeMessages()
 		return ctx, nil
 	})
 

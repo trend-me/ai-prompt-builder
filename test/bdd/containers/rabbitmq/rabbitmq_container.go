@@ -9,6 +9,7 @@ import (
 	"github.com/trend-me/golang-rabbitmq-lib/rabbitmq"
 )
 
+const dial = "amqp://rabbit:rabbit@localhost:5672/"
 var conn rabbitmq.Connection
 var queues map[string]*rabbitmq.Queue
 
@@ -60,7 +61,7 @@ func PostMessageToQueue(name string, content []byte) error {
 
 func ConsumeMessageFromQueue(name string) (content []byte, headers map[string]interface{}, err error) {
 	// Connect to RabbitMQ server
-	conn, err := amqp.Dial("amqp://rabbit:rabbit@localhost:5672/")
+	conn, err := amqp.Dial(dial)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -101,7 +102,6 @@ func ConsumeMessageFromQueue(name string) (content []byte, headers map[string]in
 	if err != nil {
 		return nil, nil, err
 	}
-
 	timeout := time.After(10 * time.Second)
 	select {
 	case d := <-msgs:
@@ -112,4 +112,33 @@ func ConsumeMessageFromQueue(name string) (content []byte, headers map[string]in
 	}
 
 	return content, headers, nil
+}
+
+
+
+func PurgeMessages() (error) {
+	// Connect to RabbitMQ server
+	conn, err := amqp.Dial(dial)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	// Open a channel
+	ch, err := conn.Channel()
+	if err != nil {
+		return err
+	}
+	defer func(ch *amqp.Channel) {
+		_ = ch.Close()
+	}(ch)
+
+
+	for k, _ := range queues {
+		_, err = ch.QueuePurge(k, false)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
