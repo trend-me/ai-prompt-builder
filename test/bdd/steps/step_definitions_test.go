@@ -226,7 +226,7 @@ func theMetadataShouldBeSentToTheValidationAPIWithTheMetadata_validation_nameTES
 }
 
 func theMetadataShouldNotBeSentToTheValidationAPI() error {
-	if scopePayloadValidationApiExecute.Called() {
+	if scopePayloadValidationApiExecute != nil && scopePayloadValidationApiExecute.Called() {
 		return fmt.Errorf("metadata was sent to the validation API")
 	}
 
@@ -339,7 +339,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 	ctx.Step(`^a message with the following data is sent to \'(.*)\' queue:$`, aMessageWithTheFollowingDataIsSentToAipromptbuilderQueue)
 	ctx.Step(`^a message with the following data should be sent to \'(.*)\' queue:$`, aMessageWithTheFollowingDataShouldBeSentToAipromptbuilderQueue)
-	ctx.Step(`^no message should be sent to the \'(.*)\' queue:$`, noMessageShouldBeSentToTheAirequesterQueue)
+	ctx.Step(`^no message should be sent to the \'(.*)\' queue$`, noMessageShouldBeSentToTheAirequesterQueue)
 	ctx.Step(`^no prompt_road_map should be fetched from the prompt-road-map-api$`, noPrompt_road_mapShouldBeFetchedFromThePromptroadmapapi)
 	ctx.Step(`^no prompt_road_map_config_execution should be updated$`, noPrompt_road_map_config_executionShouldBeUpdated)
 	ctx.Step(`^the application should not retry$`, theApplicationShouldNotRetry)
