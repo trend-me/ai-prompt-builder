@@ -148,18 +148,9 @@ func noMessageShouldBeSentToTheAirequesterQueue(queue string) error {
 		return err
 	}
 
-	assert.Nil(t, content)
-	return nil
-}
-func aMessageShouldBeSentToTheAirequesterQueue(queue string, arg1 *godog.DocString) error {
-	content, _, err := rabbitmq_container.ConsumeMessageFromQueue(queue)
-	if err != nil {
-		return err
-	}
-
-	if !jsonEqual(arg1.Content, string(content)) {
-		return fmt.Errorf("message sent to queue '%s' is not equal to the expected message: %s. Got: %s",
-			queue, arg1.Content, string(content))
+	if !assert.Nil(t, content){
+		return fmt.Errorf("a message was sent to queue '%s'. Got: %s",
+			queue, string(content))
 	}
 	return nil
 }
@@ -349,7 +340,6 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^a message with the following data is sent to \'(.*)\' queue:$`, aMessageWithTheFollowingDataIsSentToAipromptbuilderQueue)
 	ctx.Step(`^a message with the following data should be sent to \'(.*)\' queue:$`, aMessageWithTheFollowingDataShouldBeSentToAipromptbuilderQueue)
 	ctx.Step(`^no message should be sent to the \'(.*)\' queue:$`, noMessageShouldBeSentToTheAirequesterQueue)
-	ctx.Step(`^a message should be sent to the \'(.*)\' queue:$`, aMessageShouldBeSentToTheAirequesterQueue)
 	ctx.Step(`^no prompt_road_map should be fetched from the prompt-road-map-api$`, noPrompt_road_mapShouldBeFetchedFromThePromptroadmapapi)
 	ctx.Step(`^no prompt_road_map_config_execution should be updated$`, noPrompt_road_map_config_executionShouldBeUpdated)
 	ctx.Step(`^the application should not retry$`, theApplicationShouldNotRetry)

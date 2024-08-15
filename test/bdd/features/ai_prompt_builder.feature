@@ -35,7 +35,7 @@ Feature: Build AI prompts and forward the event to ai-requester queue
     Then the prompt_road_map is fetched from the prompt-road-map-api using the prompt_road_map_config_name 'TEST' and step '2'
     And the prompt_road_map_config_execution step_in_execution is updated to '2'
     And the metadata should be sent to the validation API with the metadata_validation_name 'TEST_METADATA'
-    And a message should be sent to the 'ai-requester' queue:
+    And a message with the following data should be sent to 'ai-requester' queue:
     """
     {
     "prompt_road_map_config_execution_id":"c713deb9-efa2-4d5f-9675-abe0b7e0c0d4",
@@ -84,7 +84,7 @@ Feature: Build AI prompts and forward the event to ai-requester queue
     Then the prompt_road_map is fetched from the prompt-road-map-api using the prompt_road_map_config_name 'TEST' and step '1'
     And no prompt_road_map_config_execution should be updated
     And the metadata should not be sent to the validation API
-    And a message should be sent to the 'ai-requester' queue:
+    And a message with the following data should be sent to 'ai-requester' queue:
     """
     {
     "prompt_road_map_config_execution_id":"c713deb9-efa2-4d5f-9675-abe0b7e0c0d4",

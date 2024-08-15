@@ -3,9 +3,10 @@ package rabbitmq_container
 import (
 	"context"
 	"fmt"
+	"time"
+
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/trend-me/golang-rabbitmq-lib/rabbitmq"
-	"time"
 )
 
 var conn rabbitmq.Connection
@@ -106,6 +107,7 @@ func ConsumeMessageFromQueue(name string) (content []byte, headers map[string]in
 	case d := <-msgs:
 		content = d.Body
 		headers = d.Headers
+		_=d.Ack(false)
 	case <-timeout:
 	}
 

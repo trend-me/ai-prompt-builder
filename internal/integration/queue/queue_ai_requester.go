@@ -3,10 +3,11 @@ package queue
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
+
 	"github.com/trend-me/ai-prompt-builder/internal/config/exceptions"
 	"github.com/trend-me/ai-prompt-builder/internal/domain/interfaces"
 	"github.com/trend-me/ai-prompt-builder/internal/domain/models"
-	"log/slog"
 )
 
 type (
@@ -17,6 +18,7 @@ type (
 
 	aiRequesterMessage struct {
 		PromptRoadMapConfigName        string         `json:"prompt_road_map_config_name"`
+		PromptRoadMapStep              int            `json:"prompt_road_map_step"`
 		PromptRoadMapConfigExecutionId string         `json:"prompt_road_map_config_execution_id"`
 		OutputQueue                    string         `json:"output_queue"`
 		Model                          string         `json:"model"`
@@ -36,6 +38,7 @@ func (a AiRequester) Publish(ctx context.Context, prompt string, request *models
 	b, err := json.Marshal(aiRequesterMessage{
 		PromptRoadMapConfigName:        request.PromptRoadMapConfigName,
 		PromptRoadMapConfigExecutionId: request.PromptRoadMapConfigExecutionId,
+		PromptRoadMapStep: request.PromptRoadMapStep,
 		OutputQueue:                    request.OutputQueue,
 		Model:                          request.Model,
 		Prompt:                         prompt,
