@@ -35,7 +35,7 @@ func createQueues() error {
 		"ai-requester":      nil,
 		"ai-prompt-builder": nil,
 	}
-	for k, _ := range queues {
+	for k := range queues {
 		queues[k] = rabbitmq.NewQueue(&conn, k, rabbitmq.ContentTypeJson, true, true, true)
 
 		if err := queues[k].Connect(); err != nil {
@@ -134,7 +134,7 @@ func PurgeMessages() (error) {
 	}(ch)
 
 
-	for k, _ := range queues {
+	for k := range queues {
 		_, err = ch.QueuePurge(k, false)
 		if err != nil {
 			return err
