@@ -4,6 +4,6 @@ import (
 	"context"
 )
 
-type QueueAiPromptBuilder interface {
+type QueueAiPromptBuilderConsumer interface {
 	Consume(ctx context.Context) (chan error, error)
 }

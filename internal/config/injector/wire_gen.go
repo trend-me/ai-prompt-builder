@@ -19,7 +19,7 @@ import (
 
 // Injectors from wire.go:
 
-func InitializeConsumer() (interfaces.QueueAiPromptBuilder, error) {
+func InitializeConsumer() (interfaces.QueueAiPromptBuilderConsumer, error) {
 	urlApiPromptRoadMapConfigExecution := NewUrlApiPromptRoadMapConfigExecution()
 	apiPromptRoadMapConfigExecution := api.NewPromptRoadMapConfigExecution(urlApiPromptRoadMapConfigExecution)
 	urlApiPromptRoadMapConfig := NewUrlApiPromptRoadMapConfig()
@@ -34,14 +34,14 @@ func InitializeConsumer() (interfaces.QueueAiPromptBuilder, error) {
 	queueAiRequester := queue.NewAiRequester(connectionAiRequester)
 	useCase := usecases.NewUseCase(apiPromptRoadMapConfigExecution, apiPromptRoadMapConfig, apiValidation, queueAiRequester)
 	controller := controllers.NewController(useCase)
-	connectionAiPromptBuilder := NewQueueAiPromptBuilderConnection(connection)
-	queueAiPromptBuilder := NewConsumer(controller, connectionAiPromptBuilder)
-	return queueAiPromptBuilder, nil
+	connectionAiPromptBuilderConsumer := NewQueueAiPromptBuilderConsumerConnection(connection)
+	queueAiPromptBuilderConsumer := NewConsumer(controller, connectionAiPromptBuilderConsumer)
+	return queueAiPromptBuilderConsumer, nil
 }
 
 // wire.go:
 
-func NewQueueAiPromptBuilderConnection(connection *rabbitmq.Connection) queue.ConnectionAiPromptBuilder {
+func NewQueueAiPromptBuilderConsumerConnection(connection *rabbitmq.Connection) queue.ConnectionAiPromptBuilderConsumer {
 	return rabbitmq.NewQueue(
 		connection, properties.QueueNameAiPromptBuilder, rabbitmq.ContentTypeJson, properties.CreateQueueIfNX(), true,
 		true,
@@ -55,8 +55,8 @@ func NewQueueAiRequesterConnection(connection *rabbitmq.Connection) queue.Connec
 	)
 }
 
-func NewConsumer(controller interfaces.Controller, connectionAiPromptBuilder queue.ConnectionAiPromptBuilder) interfaces.QueueAiPromptBuilder {
-	return queue.NewAiPromptBuilder(connectionAiPromptBuilder, controller)
+func NewConsumer(controller interfaces.Controller, connectionAiPromptBuilderConsumer queue.ConnectionAiPromptBuilderConsumer) interfaces.QueueAiPromptBuilderConsumer {
+	return queue.NewAiPromptBuilderConsumer(connectionAiPromptBuilderConsumer, controller)
 }
 
 func NewUrlApiValidation() api.UrlApiValidation {

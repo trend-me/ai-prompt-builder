@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/trend-me/ai-prompt-builder/internal/domain/interfaces"
 	"io"
 	"net/http"
 	"os"
@@ -12,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/trend-me/ai-prompt-builder/internal/domain/interfaces"
 
 	"github.com/cucumber/godog"
 	"github.com/joho/godotenv"
@@ -29,7 +30,7 @@ import (
 var (
 	t                                                 *testing.T
 	consumedMessage                                   string
-	consumer                                          interfaces.QueueAiPromptBuilder
+	consumer                                          interfaces.QueueAiPromptBuilderConsumer
 	m                                                 *mocha.Mocha
 	scopePromptRoadMapConfigsApiGetPromptRoadMap      *mocha.Scoped
 	scopePromptRoadMapConfigExecutionsApiUpdateStep   *mocha.Scoped

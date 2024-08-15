@@ -14,7 +14,7 @@ import (
 	"github.com/trend-me/golang-rabbitmq-lib/rabbitmq"
 )
 
-func NewQueueAiPromptBuilderConnection(connection *rabbitmq.Connection) queue.ConnectionAiPromptBuilder {
+func NewQueueAiPromptBuilderConsumerConnection(connection *rabbitmq.Connection) queue.ConnectionAiPromptBuilderConsumer {
 	return rabbitmq.NewQueue(
 		connection,
 		properties.QueueNameAiPromptBuilder,
@@ -36,8 +36,8 @@ func NewQueueAiRequesterConnection(connection *rabbitmq.Connection) queue.Connec
 	)
 }
 
-func NewConsumer(controller interfaces.Controller, connectionAiPromptBuilder queue.ConnectionAiPromptBuilder) interfaces.QueueAiPromptBuilder {
-	return queue.NewAiPromptBuilder(connectionAiPromptBuilder, controller)
+func NewConsumer(controller interfaces.Controller, connectionAiPromptBuilderConsumer queue.ConnectionAiPromptBuilderConsumer) interfaces.QueueAiPromptBuilderConsumer {
+	return queue.NewAiPromptBuilderConsumer(connectionAiPromptBuilderConsumer, controller)
 }
 
 func NewUrlApiValidation() api.UrlApiValidation {
@@ -52,7 +52,7 @@ func NewUrlApiPromptRoadMapConfigExecution() api.UrlApiPromptRoadMapConfigExecut
 	return properties.UrlApiPromptRoadMapConfigExecution
 }
 
-func InitializeConsumer() (interfaces.QueueAiPromptBuilder, error) {
+func InitializeConsumer() (interfaces.QueueAiPromptBuilderConsumer, error) {
 	wire.Build(controllers.NewController,
 		usecases.NewUseCase,
 		NewUrlApiPromptRoadMapConfig,
@@ -63,7 +63,7 @@ func InitializeConsumer() (interfaces.QueueAiPromptBuilder, error) {
 		api.NewValidation,
 		queue.NewAiRequester,
 		NewQueueAiRequesterConnection,
-		NewQueueAiPromptBuilderConnection,
+		NewQueueAiPromptBuilderConsumerConnection,
 		connections.ConnectQueue,
 		NewConsumer)
 	return nil, nil
