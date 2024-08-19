@@ -6,5 +6,5 @@ import (
 )
 
 type ApiValidation interface {
-	ExecutePayloadValidator(ctx context.Context, payloadValidatorId string, payload []byte) (*models.PayloadValidatorExecutionResponse, error)
+	ExecutePayloadValidator(ctx context.Context, PayloadValidatorName string, payload []byte) (*models.PayloadValidatorExecutionResponse, error)
 }
