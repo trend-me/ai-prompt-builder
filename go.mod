@@ -9,7 +9,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/stretchr/testify v1.9.0
-	github.com/trend-me/golang-rabbitmq-lib v1.0.6
+	github.com/trend-me/golang-rabbitmq-lib v1.0.11
 	github.com/vitorsalgado/mocha/v3 v3.0.2
 )
 

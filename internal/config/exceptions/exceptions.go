@@ -5,7 +5,7 @@ func NewValidationError(messages ...string) ErrorType {
 		Abort:     true,
 		Notify:    true,
 		ErrorType: "Validation Error",
-		message:   messages,
+		Message:   messages,
 	}
 }
 
@@ -14,7 +14,7 @@ func NewUnknownError(messages ...string) ErrorType {
 		Abort:     false,
 		Notify:    false,
 		ErrorType: "Unknown Error",
-		message:   messages,
+		Message:   messages,
 	}
 }
 
@@ -23,7 +23,7 @@ func NewMetadataValidationError(messages ...string) ErrorType {
 		Abort:     true,
 		Notify:    true,
 		ErrorType: "Metadata Validation Error",
-		message:   messages,
+		Message:   messages,
 	}
 }
 
@@ -32,7 +32,7 @@ func NewQueueError(messages ...string) ErrorType {
 		Abort:     false,
 		Notify:    true,
 		ErrorType: "Queue Error",
-		message:   messages,
+		Message:   messages,
 	}
 }
 
@@ -40,17 +40,17 @@ func NewUpdatePromptRoadMapConfigExecutionError(messages ...string) ErrorType {
 	return ErrorType{
 		Abort:     false,
 		Notify:    true,
-		ErrorType: "Update PromptRoadMapConfigExecution Error",
-		message:   messages,
+		ErrorType: "Update Prompt Road Map Config Execution Error",
+		Message:   messages,
 	}
 }
 
-func NewGetPromptRoadMapError(messages ...string) ErrorType {
+func NewGetPromptRoadMapConfigError(messages ...string) ErrorType {
 	return ErrorType{
 		Abort:     false,
 		Notify:    true,
-		ErrorType: "Get PromptRoadMap Error",
-		message:   messages,
+		ErrorType: "Get Prompt Road Map Config Error",
+		Message:   messages,
 	}
 }
 
@@ -58,8 +58,8 @@ func NewPromptRoadMapConfigNotFoundError(messages ...string) ErrorType {
 	return ErrorType{
 		Abort:     true,
 		Notify:    true,
-		ErrorType: "PromptRoadMap NotFound Error",
-		message:   messages,
+		ErrorType: "Prompt Road Map Not Found Error",
+		Message:   messages,
 	}
 }
 
@@ -67,8 +67,8 @@ func NewPayloadValidatorNotFoundError(messages ...string) ErrorType {
 	return ErrorType{
 		Abort:     true,
 		Notify:    true,
-		ErrorType: "PayloadValidator NotFound Error",
-		message:   messages,
+		ErrorType: "Payload Validator Not Found Error",
+		Message:   messages,
 	}
 }
 
@@ -76,7 +76,7 @@ func NewPayloadValidatorError(messages ...string) ErrorType {
 	return ErrorType{
 		Abort:     true,
 		Notify:    true,
-		ErrorType: "PayloadValidator Error",
-		message:   messages,
+		ErrorType: "Payload Validator Error",
+		Message:   messages,
 	}
 }

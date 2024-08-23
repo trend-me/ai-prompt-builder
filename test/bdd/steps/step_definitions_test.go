@@ -40,11 +40,7 @@ var (
 	requestPromptRoadMapConfigsApiGetPromptRoadMap    *http.Request
 )
 
-
-
-func setup(t *testing.T) {
-	m = mocha.New(t)
-	m.Start()
+func environment() {
 	_ = os.Setenv("URL_API_PROMPT_ROAD_MAP_CONFIG", m.URL()+"/prompt_road_map_configs")
 	_ = os.Setenv("URL_API_PROMPT_ROAD_MAP_CONFIG_EXECUTION", m.URL()+"/prompt_road_map_config_executions")
 	_ = os.Setenv("URL_API_VALIDATION", m.URL()+"/payload_validations")
@@ -52,6 +48,12 @@ func setup(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error loading .env file: %v", err)
 	}
+}
+func setup(t *testing.T) {
+	m = mocha.New(t)
+	m.Start()
+	var err error
+	environment()
 
 	containers.Up()
 	for range 10 {
@@ -137,7 +139,7 @@ func noMessageShouldBeSentToTheAirequesterQueue(queue string) error {
 		return err
 	}
 
-	if !assert.Nil(t, content){
+	if !assert.Nil(t, content) {
 		return fmt.Errorf("a message was sent to queue '%s'. Got: %s",
 			queue, string(content))
 	}
@@ -145,7 +147,7 @@ func noMessageShouldBeSentToTheAirequesterQueue(queue string) error {
 }
 
 func noPrompt_road_mapShouldBeFetchedFromThePromptroadmapapi() error {
-	if scopePromptRoadMapConfigsApiGetPromptRoadMap !=nil && scopePromptRoadMapConfigsApiGetPromptRoadMap.Called() {
+	if scopePromptRoadMapConfigsApiGetPromptRoadMap != nil && scopePromptRoadMapConfigsApiGetPromptRoadMap.Called() {
 		return fmt.Errorf("prompt road map was fetched")
 	}
 
@@ -225,11 +227,11 @@ func theMetadataShouldNotBeSentToTheValidationAPI() error {
 func thePromptRoadMapAPIReturnsAnStatusCode500() error {
 	scopePromptRoadMapConfigsApiGetPromptRoadMap = m.AddMocks(mocha.Get(expect.Func(func(v any, a expect.Args) (bool, error) {
 		return strings.Contains(a.RequestInfo.Request.URL.Path, "/prompt_road_map_configs"), nil
-	})).ReplyFunction(func(r *http.Request, _ reply.M, _ params.P) (*reply.Response, error){
+	})).ReplyFunction(func(r *http.Request, _ reply.M, _ params.P) (*reply.Response, error) {
 		requestPromptRoadMapConfigsApiGetPromptRoadMap = r
 		return &reply.Response{
-			 Status: http.StatusInternalServerError,
-			 Body:  io.NopCloser(strings.NewReader(`{"error": "Internal Server Error"}`)),
+			Status: http.StatusInternalServerError,
+			Body:   io.NopCloser(strings.NewReader(`{"error": "Internal Server Error"}`)),
 		}, nil
 	}))
 
@@ -304,9 +306,15 @@ func theValidationAPIReturnsTheFollowingValidationResult(name string, arg1 *godo
 	return nil
 }
 
+func maxReceiveCountIs(count string) error {
+	os.Setenv("MAX_RECEIVE_COUNT", count)
+	return nil
+}
+
 func InitializeScenario(ctx *godog.ScenarioContext) {
 
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
+		environment()
 		if scopePromptRoadMapConfigsApiGetPromptRoadMap != nil {
 			scopePromptRoadMapConfigsApiGetPromptRoadMap.Clean()
 			scopePromptRoadMapConfigsApiGetPromptRoadMap = nil
@@ -314,7 +322,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 		if scopePromptRoadMapConfigExecutionsApiUpdateStep != nil {
 			scopePromptRoadMapConfigExecutionsApiUpdateStep.Clean()
-			scopePromptRoadMapConfigExecutionsApiUpdateStep = nil 
+			scopePromptRoadMapConfigExecutionsApiUpdateStep = nil
 		}
 
 		if scopePayloadValidationApiExecute != nil {
@@ -322,7 +330,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 			scopePayloadValidationApiExecute = nil
 		}
 
-		scopePayloadValidationApiExecute = nil 
+		scopePayloadValidationApiExecute = nil
 		requestPayloadValidationApiExecute = nil
 		requestPromptRoadMapConfigExecutionsApiUpdateStep = nil
 		requestPromptRoadMapConfigsApiGetPromptRoadMap = nil
@@ -362,4 +370,5 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the prompt_road_map is fetched from the prompt-road-map-api using the prompt_road_map_config_name \'(.*)\' and step \'(\d+)\'$`, thePrompt_road_mapIsFetchedFromThePromptroadmapapiUsingThePrompt_road_map_config_name)
 	ctx.Step(`^the prompt_road_map_config_execution step_in_execution is updated to \'(\d+)\'$`, thePrompt_road_map_config_executionIsUpdatedWithTheCurrentStepOfThePrompt_road_map)
 	ctx.Step(`^the validation API returns the following validation result for payload_validation \'(.*)\':$`, theValidationAPIReturnsTheFollowingValidationResult)
+	ctx.Step(`^max receive count is \'(.*)\'$`, maxReceiveCountIs)
 }

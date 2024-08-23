@@ -9,11 +9,11 @@ type ErrorType struct {
 	Abort     bool     `json:"abort"`
 	Notify    bool     `json:"notify"`
 	ErrorType string   `json:"error_type"`
-	message   []string `json:"message"`
+	Message   []string `json:"message"`
 }
 
 func (e ErrorType) Error() string {
-	return strings.Join(e.message, ";")
+	return strings.Join(e.Message, ";")
 }
 
 func (e ErrorType) JSON() []byte {

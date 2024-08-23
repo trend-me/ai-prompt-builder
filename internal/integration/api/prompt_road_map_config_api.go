@@ -55,7 +55,7 @@ func (p PromptRoadMapConfig) GetPromptRoadMap(ctx context.Context, promptRoadMap
 					promptRoadMapConfigName, promptRoadMapStep))
 
 		}
-		return nil, exceptions.NewGetPromptRoadMapError(
+		return nil, exceptions.NewGetPromptRoadMapConfigError(
 			fmt.Sprintf("response with statusCode: '%s'",
 				resp.Status))
 	}
@@ -68,7 +68,7 @@ func (p PromptRoadMapConfig) GetPromptRoadMap(ctx context.Context, promptRoadMap
 	var response models.PromptRoadMap
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return nil, exceptions.NewGetPromptRoadMapError("error unmarshalling response", err.Error())
+		return nil, exceptions.NewGetPromptRoadMapConfigError("error unmarshalling response", err.Error())
 	}
 
 	return &response, nil
