@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
-	"github.com/trend-me/ai-prompt-builder/internal/config/connections"
-	"github.com/trend-me/ai-prompt-builder/internal/config/injector"
 	"log/slog"
+
+	"github.com/trend-me/ai-prompt-builder/internal/config/injector"
+	"github.com/trend-me/ai-prompt-builder/internal/integration/connections"
 )
 
 func main() {

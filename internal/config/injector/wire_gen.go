@@ -7,12 +7,12 @@
 package injector
 
 import (
-	"github.com/trend-me/ai-prompt-builder/internal/integration/connections"
 	"github.com/trend-me/ai-prompt-builder/internal/config/properties"
 	"github.com/trend-me/ai-prompt-builder/internal/delivery/controllers"
 	"github.com/trend-me/ai-prompt-builder/internal/domain/interfaces"
 	"github.com/trend-me/ai-prompt-builder/internal/domain/usecases"
 	"github.com/trend-me/ai-prompt-builder/internal/integration/api"
+	"github.com/trend-me/ai-prompt-builder/internal/integration/connections"
 	"github.com/trend-me/ai-prompt-builder/internal/integration/queues"
 	"github.com/trend-me/golang-rabbitmq-lib/rabbitmq"
 )
@@ -32,7 +32,9 @@ func InitializeConsumer() (interfaces.QueueAiPromptBuilderConsumer, error) {
 	}
 	connectionAiRequester := NewQueueAiRequesterConnection(connection)
 	queueAiRequester := queues.NewAiRequester(connectionAiRequester)
-	useCase := usecases.NewUseCase(apiPromptRoadMapConfigExecution, apiPromptRoadMapConfig, apiValidation, queueAiRequester)
+	connectionOutputGetter := newQueueConnectionOutputGetter(connection)
+	queueOutput := queues.NewOutput(connectionOutputGetter)
+	useCase := usecases.NewUseCase(apiPromptRoadMapConfigExecution, apiPromptRoadMapConfig, apiValidation, queueAiRequester, queueOutput)
 	controller := controllers.NewController(useCase)
 	connectionAiPromptBuilderConsumer := NewQueueAiPromptBuilderConsumerConnection(connection)
 	queueAiPromptBuilderConsumer := NewConsumer(controller, connectionAiPromptBuilderConsumer)
@@ -53,6 +55,16 @@ func NewQueueAiRequesterConnection(connection *rabbitmq.Connection) queues.Conne
 		connection, properties.QueueAiRequester, rabbitmq.ContentTypeJson, properties.CreateQueueIfNX(), true,
 		true,
 	)
+}
+
+func newQueueConnectionOutputGetter(connection *rabbitmq.Connection) queues.ConnectionOutputGetter {
+	return func(queuesName string) queues.ConnectionOutput {
+		return rabbitmq.NewQueue(
+			connection,
+			queuesName, rabbitmq.ContentTypeJson, properties.CreateQueueIfNX(), true,
+			true,
+		)
+	}
 }
 
 func NewConsumer(controller interfaces.Controller, connectionAiPromptBuilderConsumer queues.ConnectionAiPromptBuilderConsumer) interfaces.QueueAiPromptBuilderConsumer {
