@@ -15,6 +15,7 @@ type UseCase struct {
 	apiPromptRoadMapConfig          interfaces.ApiPromptRoadMapConfig
 	apiPromptRoadMapConfigExecution interfaces.ApiPromptRoadMapConfigExecution
 	apiValidation                   interfaces.ApiValidation
+	queueOutput                     interfaces.QueueOutput
 	queueAiRequester                interfaces.QueueAiRequester
 }
 
@@ -76,8 +77,9 @@ func (u UseCase) validateMetadata(ctx context.Context, promptRoadMap *models.Pro
 	return nil
 }
 
-func NewUseCase(apiPromptRoadMapConfigExecution interfaces.ApiPromptRoadMapConfigExecution, apiPromptRoadMapConfig interfaces.ApiPromptRoadMapConfig, validationApi interfaces.ApiValidation, queueAiRequester interfaces.QueueAiRequester) interfaces.UseCase {
+func NewUseCase(apiPromptRoadMapConfigExecution interfaces.ApiPromptRoadMapConfigExecution, apiPromptRoadMapConfig interfaces.ApiPromptRoadMapConfig, validationApi interfaces.ApiValidation, queueAiRequester interfaces.QueueAiRequester, queueOutput interfaces.QueueOutput) interfaces.UseCase {
 	return &UseCase{
+		queueOutput:                     queueOutput,
 		apiPromptRoadMapConfig:          apiPromptRoadMapConfig,
 		apiPromptRoadMapConfigExecution: apiPromptRoadMapConfigExecution,
 		apiValidation:                   validationApi,

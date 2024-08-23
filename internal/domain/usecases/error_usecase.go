@@ -7,9 +7,10 @@ import (
 
 	"github.com/trend-me/ai-prompt-builder/internal/config/exceptions"
 	"github.com/trend-me/ai-prompt-builder/internal/config/properties"
+	"github.com/trend-me/ai-prompt-builder/internal/domain/models"
 )
 
-func (u UseCase) HandleError(ctx context.Context, err error) error {
+func (u UseCase) HandleError(ctx context.Context, err error, request *models.Request) error {
 	slog.ErrorContext(ctx, "useCase.HandleError",
 		slog.String("details", "process started"),
 		slog.String("error", err.Error()))
@@ -28,8 +29,11 @@ func (u UseCase) HandleError(ctx context.Context, err error) error {
 	}
 
 	if errParsed.Abort || properties.GetCtxRetryCount(ctx) > properties.GetMaxReceiveCount() {
+		if request != nil {
+			request.Error = &errParsed
+			_ = u.queueOutput.Publish(ctx, request.OutputQueue, request)
+		}
 		return nil
 	}
-
 	return errParsed
 }
