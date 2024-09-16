@@ -1,6 +1,6 @@
 build:
 	go mod tidy
-	go build ./cmd/consumer
+	go build -o consumer.out ./cmd/consumer
 
 wire:
 	wire  ./internal/config/injector
